@@ -35,6 +35,10 @@ dependencies:
   smart_auth: ^3.2.0
   flutter_svg: ^2.2.3
   app_links: ^3.5.0
+  media_kit: ^1.1.11
+  media_kit_video: ^1.2.4
+  media_kit_libs_video: ^1.0.4
+  visibility_detector: ^0.4.0+2
   image: ^4.1.7
 dev_dependencies:
   flutter_test:
