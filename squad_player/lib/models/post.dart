@@ -21,6 +21,9 @@ class Post {
   final String? status;
   int views; // Added views field
   final String? thumbnailUrl;
+  final String? lowQualityUrl;
+  final String? mediumQualityUrl;
+  final String? highQualityUrl;
 
   Post({
     required this.id,
@@ -45,7 +48,9 @@ class Post {
     this.status,
     this.views = 0, // Default to 0
     this.thumbnailUrl,
-
+    this.lowQualityUrl,
+    this.mediumQualityUrl,
+    this.highQualityUrl,
   });
 
   String get userType {
@@ -84,6 +89,9 @@ class Post {
       mediaType: json['media_type'] ?? 'image',
       mediaUrl: json['media_url'] ?? '',
       thumbnailUrl: json['thumbnail_url'],
+      lowQualityUrl: json['low_quality_url'] as String?,
+      mediumQualityUrl: json['medium_quality_url'] as String?,
+      highQualityUrl: json['high_quality_url'] as String?,
       caption: json['caption'],
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
       likeCount: int.tryParse(json['like_count']?.toString() ?? '0') ?? 0,
@@ -124,7 +132,65 @@ class Post {
       'comment_count': commentCount,
       'status': status,
       'views': views,
+      'thumbnail_url': thumbnailUrl,
+      'low_quality_url': lowQualityUrl,
+      'medium_quality_url': mediumQualityUrl,
+      'high_quality_url': highQualityUrl,
     };
+  }
+
+  Post copyWith({
+    int? views,
+    int? likeCount,
+    int? loveCount,
+    int? talentCount,
+    int? amazingCount,
+    int? commentCount,
+    String? userReaction,
+    bool? isPinned,
+    bool? isHidden,
+    String? status,
+    String? mediaType,
+    String? mediaUrl,
+    String? caption,
+    String? authorType,
+    String? userPhoto,
+    String? country,
+    String? position,
+    String? userName,
+    int? userId,
+    String? thumbnailUrl,
+    String? lowQualityUrl,
+    String? mediumQualityUrl,
+    String? highQualityUrl,
+  }) {
+    return Post(
+      id: id,
+      userId: userId ?? this.userId,
+      userName: userName ?? this.userName,
+      userPhoto: userPhoto ?? this.userPhoto,
+      country: country ?? this.country,
+      position: position ?? this.position,
+      mediaType: mediaType ?? this.mediaType,
+      mediaUrl: mediaUrl ?? this.mediaUrl,
+      caption: caption ?? this.caption,
+      createdAt: createdAt,
+      likeCount: likeCount ?? this.likeCount,
+      loveCount: loveCount ?? this.loveCount,
+      talentCount: talentCount ?? this.talentCount,
+      amazingCount: amazingCount ?? this.amazingCount,
+      userReaction: userReaction ?? this.userReaction,
+      authorType: authorType ?? this.authorType,
+      isHidden: isHidden ?? this.isHidden,
+      isPinned: isPinned ?? this.isPinned,
+      commentCount: commentCount ?? this.commentCount,
+      status: status ?? this.status,
+      views: views ?? this.views,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      lowQualityUrl: lowQualityUrl ?? this.lowQualityUrl,
+      mediumQualityUrl: mediumQualityUrl ?? this.mediumQualityUrl,
+      highQualityUrl: highQualityUrl ?? this.highQualityUrl,
+    );
   }
 
   void incrementReaction(String reactionType) {
