@@ -80,11 +80,18 @@ exports.updateVersionPolicy = async (req, res) => {
       return res.status(400).json({ message: 'latest_version and minimum_version are required' });
     }
  
-    // Validate semver format (x.y.z)
-    const semverRe = /^\d+\.\d+\.\d+$/;
+    // Accept semver-like strings:
+    // - 1.2.3
+    // - 1.2.3+45
+    // - 1.2.3-beta.1
+    const semverRe = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
     if (!semverRe.test(latest_version) || !semverRe.test(minimum_version)) {
-      return res.status(400).json({ message: 'Versions must be in x.y.z format' });
+      return res.status(400).json({ message: 'Versions must be semver-like (example: 1.2.3 or 1.2.3+45)' });
     }
+
+    // Store only core x.y.z to keep DB values consistent.
+    const normalizedLatest = latest_version.split(/[+-]/)[0];
+    const normalizedMinimum = minimum_version.split(/[+-]/)[0];
  
     await db.query(
       `INSERT INTO app_version_policy
@@ -100,7 +107,7 @@ exports.updateVersionPolicy = async (req, res) => {
          android_store_url= VALUES(android_store_url),
          ios_store_url    = VALUES(ios_store_url)`,
       [
-        platform, latest_version, minimum_version,
+        platform, normalizedLatest, normalizedMinimum,
         force_update ? 1 : 0,
         maintenance_mode ? 1 : 0,
         message, android_store_url, ios_store_url,

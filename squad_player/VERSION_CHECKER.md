@@ -50,6 +50,7 @@ version: 1.8.0+12
 
 - App version used by checker = `1.8.0`
 - Build number = `12`
+- Comparison uses app version (`x.y.z`), not build number.
 
 After changing it, rebuild/reinstall the app.
 
@@ -128,6 +129,17 @@ curl -X PUT "http://<YOUR_HOST>/api/app/version-policy" \
     "message":"Please update to continue."
   }'
 ```
+
+### Why changing fallback values may do nothing
+
+In `getVersionPolicy`, fallback JSON is used **only when no DB row exists** (or on error).
+If `app_version_policy` table already has a row for your platform, that DB row wins.
+
+So for real updates, always call:
+
+`PUT /api/app/version-policy`
+
+instead of changing hardcoded fallback values in controller source.
 
 ### Important
 
