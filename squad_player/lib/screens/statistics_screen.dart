@@ -29,7 +29,7 @@ class StatisticsScreen extends StatefulWidget {
 class _StatisticsScreenState extends State<StatisticsScreen> {
   bool _isLoading = true;
   Map<String, dynamic> _stats = {};
-  String _selectedPeriod = '';
+  _Period _selectedPeriod = _Period.all;
   int _unreadNotifications = 0;
   DateTimeRange? _selectedRange;
 
@@ -517,7 +517,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           : RefreshIndicator(
         onRefresh: () async {
           setState(() {
-            _selectedPeriod = '';
+            _selectedPeriod = _Period.all;
             _selectedRange = null;
           });
           await _loadStatistics();
