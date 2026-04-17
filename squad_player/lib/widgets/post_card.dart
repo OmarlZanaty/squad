@@ -102,15 +102,13 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
     if (PostCard._viewedThisSession.contains(k)) return;
     PostCard._viewedThisSession.add(k);
     try {
-      final res = await ApiService.incrementPostView(widget.post.id);
-      int? newViews;
-      if (res is Map) {
-        final raw = res['views'] ?? res['post']?['views'] ?? res['data']?['views'];
-        if (raw != null) newViews = int.tryParse(raw.toString());
-      }
-      if (newViews != null && mounted) {
-        widget.onViewsUpdated?.call(widget.post.id, newViews);
-      }
+      await ApiService.incrementPostView(widget.post.id);
+      final newViews = (_localPost.views) + 1;
+      if (!mounted) return;
+      setState(() {
+        _localPost = _localPost.copyWith(views: newViews);
+      });
+      widget.onViewsUpdated?.call(widget.post.id, newViews);
     } catch (_) {}
   }
 
@@ -941,8 +939,7 @@ class _MediaContent extends StatelessWidget {
           context,
           MaterialPageRoute(
             builder: (_) => MediaViewerScreen(
-              mediaUrl: post.mediaUrl,
-              mediaType: 'image',
+              imageUrl: post.mediaUrl,
             ),
           ),
         );
