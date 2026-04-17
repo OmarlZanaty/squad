@@ -173,7 +173,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       );
 
       // ✅ Add fingerprint enable prompt + secure token saving here
-      await AuthService.saveToken(token);
+      await SecureStorageService.saveToken(token);
 
       final t = await SecureStorageService.getToken();
       debugPrint('LOGIN secure token saved? ${t != null && t.isNotEmpty}');

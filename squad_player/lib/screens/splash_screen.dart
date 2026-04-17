@@ -125,11 +125,11 @@ class _SplashScreenState extends State<SplashScreen>
           if (!mounted) return;
           if (goUpdate == true) {
             // Open store
-            ForceUpdateScreen(
+            await ForceUpdateScreen.openStoreStatic(
+              context,
               policy: policy,
-              currentVersion: current,
               packageName: packageName,
-            ).openStoreStatic(context);
+            );
             // Still navigate into app after opening store
           }
         }

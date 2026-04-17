@@ -26,6 +26,30 @@ class ForceUpdateScreen extends StatelessWidget {
         AppConfig.androidStoreUrlFromPackage(packageName);
   }
 
+  static Future<void> openStoreStatic(
+    BuildContext context, {
+    required AppVersionPolicy policy,
+    required String packageName,
+  }) async {
+    final storeUrl = Platform.isIOS
+        ? (policy.iosStoreUrl ?? AppConfig.iosStoreUrl)
+        : (policy.androidStoreUrl ??
+            AppConfig.androidStoreUrlFromPackage(packageName));
+
+    final opened = await launchUrl(
+      Uri.parse(storeUrl),
+      mode: LaunchMode.externalApplication,
+    );
+
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not open the store page.'),
+        ),
+      );
+    }
+  }
+
   Future<void> _openStore(BuildContext context) async {
     final uri = Uri.parse(_storeUrl());
 

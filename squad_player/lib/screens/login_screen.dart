@@ -10,6 +10,7 @@ import 'package:squad_player/utils/app_colors.dart';
 import 'package:squad_player/utils/app_localizations.dart';
 import 'package:squad_player/services/api_service.dart';
 import 'package:squad_player/services/auth_service.dart';
+import 'package:squad_player/services/secure_storage_service.dart';
 import 'package:squad_player/screens/register_screen.dart';
 import 'package:squad_player/screens/main_screen.dart';
 
@@ -345,7 +346,7 @@ class _LoginScreenState extends State<LoginScreen> {
         role: result['user']['type'],
       );
 
-      await AuthService.saveToken(token);
+      await SecureStorageService.saveToken(token);
 
       final t = await SecureStorageService.getToken();
       debugPrint('LOGIN secure token saved? ${t != null && t.isNotEmpty}');
