@@ -75,6 +75,7 @@ exports.updateVersionPolicy = async (req, res) => {
       platform          = 'both',
     } = req.body;
  
+    // minimum_version is what the mobile app uses to block older builds.
     if (!latest_version || !minimum_version) {
       return res.status(400).json({ message: 'latest_version and minimum_version are required' });
     }
