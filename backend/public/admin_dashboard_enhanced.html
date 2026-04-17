@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squad Admin Dashboard - Enhanced</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <!-- Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <h1><i class="fas fa-shield-alt"></i> لوحة تحكم Squad</h1>
+                <p class="subtitle">نظام إدارة شامل</p>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-icon" onclick="refreshAll()" title="تحديث البيانات">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <div class="admin-info">
+                    <i class="fas fa-user-shield"></i>
+                    <span>المسؤول</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div class="stats-grid">
+            <div class="stat-card stat-primary">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>إجمالي المستخدمين</h3>
+                    <div class="value" id="total-users">0</div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="users-change">+0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-warning">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>في انتظار الموافقة</h3>
+                    <div class="value" id="pending-approvals">0</div>
+                    <div class="stat-badge">يحتاج إجراء</div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-info">
+                <div class="stat-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>إجمالي المنشورات</h3>
+                    <div class="value" id="total-posts">0</div>
+                    <div class="stat-change positive">
+                        <i class="fas fa-arrow-up"></i>
+                        <span id="posts-change">+0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card stat-success">
+                <div class="stat-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="stat-content">
+                    <h3>إجمالي المحادثات</h3>
+                    <div class="value" id="total-chats">0</div>
+                    <div class="stat-info-text">نشط</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('analytics')">
+                <i class="fas fa-chart-line"></i> التحليلات
+            </button>
+            <button class="tab-btn" onclick="switchTab('users')">
+                <i class="fas fa-users"></i> المستخدمون
+            </button>
+            <button class="tab-btn" onclick="switchTab('approvals')">
+                <i class="fas fa-user-check"></i> الموافقات
+            </button>
+            <button class="tab-btn" onclick="switchTab('posts')">
+                <i class="fas fa-file-alt"></i> المنشورات
+            </button>
+            <button class="tab-btn" onclick="switchTab('chats')">
+                <i class="fas fa-comments"></i> المحادثات
+            </button>
+            <button class="tab-btn" onclick="switchTab('reports')">
+                <i class="fas fa-flag"></i> البلاغات
+            </button>
+            <button class="tab-btn" onclick="switchTab('notifications')">
+                <i class="fas fa-bell"></i> الإشعارات
+            </button>
+            <button class="tab-btn" onclick="switchTab('settings')">
+                <i class="fas fa-cog"></i> الإعدادات
+            </button>
+            <button class="tab-btn" onclick="switchTab('logs')">
+                <i class="fas fa-history"></i> السجلات
+            </button>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics-tab" class="tab-content active">
+            <div class="content-header">
+                <h2><i class="fas fa-chart-line"></i> التحليلات والإحصائيات</h2>
+            </div>
+            
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3>نمو المستخدمين</h3>
+                    <canvas id="usersGrowthChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>المنشورات حسب النوع</h3>
+                    <canvas id="postsTypeChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>توزيع المستخدمين حسب المركز</h3>
+                    <canvas id="positionsChart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>النشاط الأسبوعي</h3>
+                    <canvas id="activityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="users-tab" class="tab-content">
+            <div class="content-header">
+                <h2><i class="fas fa-users"></i> إدارة المستخدمين</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="exportToCSV('users')">
+                        <i class="fas fa-download"></i> تصدير CSV
+                    </button>
+                    <button class="btn btn-danger" onclick="bulkDeleteUsers()" id="bulk-delete-users" style="display:none;">
+                        <i class="fas fa-trash"></i> حذف المحدد
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="users-search" placeholder="بحث بالاسم أو البريد..." onkeyup="filterUsers()">
+                </div>
+                <select id="users-status-filter" onchange="filterUsers()">
+                    <option value="">كل الحالات</option>
+                    <option value="active">نشط</option>
+                    <option value="pending">قيد الانتظار</option>
+                    <option value="banned">محظور</option>
+                </select>
+                <select id="users-position-filter" onchange="filterUsers()">
+                    <option value="">كل المراكز</option>
+                    <option value="goalkeeper">حارس مرمى</option>
+                    <option value="defender">مدافع</option>
+                    <option value="midfielder">وسط</option>
+                    <option value="forward">مهاجم</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all-users" onchange="toggleSelectAll('users')"></th>
+                            <th>#</th>
+                            <th>الاسم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>المركز</th>
+                            <th>الحالة</th>
+                            <th>تاريخ التسجيل</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        <tr>
+                            <td colspan="8" class="loading">
+                                <div class="spinner"></div>
+                                <p>جاري تحميل البيانات...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="users-pagination"></div>
+        </div>
+
+        <!-- Approvals Tab -->
+        <div id="approvals-tab" class="tab-content">
+            <div class="content-header">
+                <h2><i class="fas fa-user-check"></i> طلبات الموافقة</h2>
+                <div class="header-actions">
+                    <button class="btn btn-success" onclick="bulkApproveUsers()" id="bulk-approve-users" style="display:none;">
+                        <i class="fas fa-check"></i> موافقة المحدد
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="approvals-search" placeholder="بحث..." onkeyup="filterApprovals()">
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="approvals-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all-approvals" onchange="toggleSelectAll('approvals')"></th>
+                            <th>#</th>
+                            <th>الاسم</th>
+                            <th>البريد الإلكتروني</th>
+                            <th>المركز</th>
+                            <th>تاريخ الطلب</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="approvals-tbody">
+                        <tr>
+                            <td colspan="7" class="loading">
+                                <div class="spinner"></div>
+                                <p>جاري تحميل البيانات...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="approvals-pagination"></div>
+        </div>
+
+        <!-- Posts Tab -->
+        <div id="posts-tab" class="tab-content">
+            <div class="content-header">
+                <h2><i class="fas fa-file-alt"></i> إدارة المنشورات</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="exportToCSV('posts')">
+                        <i class="fas fa-download"></i> تصدير CSV
+                    </button>
+                    <button class="btn btn-danger" onclick="bulkDeletePosts()" id="bulk-delete-posts" style="display:none;">
+                        <i class="fas fa-trash"></i> حذف المحدد
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="posts-search" placeholder="بحث في المنشورات..." onkeyup="filterPosts()">
+                </div>
+                <select id="posts-media-filter" onchange="filterPosts()">
+                    <option value="">كل الأنواع</option>
+                    <option value="image">صورة</option>
+                    <option value="video">فيديو</option>
+                    <option value="text">نص فقط</option>
+                </select>
+                <input type="date" id="posts-date-filter" onchange="filterPosts()">
+            </div>
+
+            <div class="table-container">
+                <table id="posts-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="select-all-posts" onchange="toggleSelectAll('posts')"></th>
+                            <th>#</th>
+                            <th>الكاتب</th>
+                            <th>المحتوى</th>
+                            <th>النوع</th>
+                            <th>التفاعلات</th>
+                            <th>التاريخ</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="posts-tbody">
+                        <tr>
+                            <td colspan="8" class="loading">
+                                <div class="spinner"></div>
+                                <p>جاري تحميل البيانات...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="posts-pagination"></div>
+        </div>
+
+        <!-- Chats Tab -->
+        <div id="chats-tab" class="tab-content">
+            <div class="content-header">
+                <h2><i class="fas fa-comments"></i> إدارة المحادثات</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="exportToCSV('chats')">
+                        <i class="fas fa-download"></i> تصدير CSV
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="chats-search" placeholder="بحث في المحادثات..." onkeyup="filterChats()">
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="chats-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>المستخدم 1</th>
+                            <th>المستخدم 2</th>
+                            <th>آخر رسالة</th>
+                            <th>التاريخ</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="chats-tbody">
+                        <tr>
+                            <td colspan="6" class="loading">
+                                <div class="spinner"></div>
+                                <p>جاري تحميل البيانات...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="chats-pagination"></div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports-tab" class="tab-content">
+            <div class="content-header">
+                <h2><i class="fas fa-flag"></i> البلاغات والإشراف</h2>
+            </div>
+
+            <div class="reports-grid">
+                <div class="report-card">
+                    <div class="report-header">
+                        <h3><i class="fas fa-exclamation-triangle"></i> بلاغات المنشورات</h3>
+                        <span class="badge badge-danger" id="reported-posts-count">0</span>
+                    </div>
+                    <div id="reported-posts-list" class="report-list">
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <p>لا توجد بلاغات</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-header">
+                        <h3><i class="fas fa-user-slash"></i> بلاغات المستخدمين</h3>
+                        <span class="badge badge-danger" id="reported-users-count">0</span>
+                    </div>
+                    <div id="reported-users-list" class="report-list">
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <p>لا توجد بلاغات</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <div class="report-header">
+                        <h3><i class="fas fa-comment-slash"></i> بلاغات المحادثات</h3>
+                        <span class="badge badge-danger" id="reported-chats-count">0</span>
+                    </div>
+                    <div id="reported-chats-list" class="report-list">
+                        <div class="empty-state">
+                            <i class="fas fa-check-circle"></i>
+                            <p>لا توجد بلاغات</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Tab -->
+        <div id="notifications-tab" class="tab-content">
+            <div class="content-header">
+                <h2><i class="fas fa-bell"></i> إرسال الإشعارات</h2>
+            </div>
+
+            <div class="notification-form">
+                <div class="form-group">
+                    <label>نوع الإشعار</label>
+                    <select id="notification-type">
+                        <option value="all">جميع المستخدمين</option>
+                        <option value="active">المستخدمون النشطون فقط</option>
+                        <option value="specific">مستخدم محدد</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="specific-user-group" style="display:none;">
+                    <label>معرف المستخدم</label>
+                    <input type="number" id="specific-user-id" placeholder="أدخل معرف المستخدم">
+                </div>
+
+                <div class="form-group">
+                    <label>العنوان</label>
+                    <input type="text" id="notification-title" placeholder="عنوان الإشعار">
+                </div>
+
+                <div class="form-group">
+                    <label>الرسالة</label>
+                    <textarea id="notification-message" rows="4" placeholder="محتوى الإشعار"></textarea>
+                </div>
+
+                <button class="btn btn-primary btn-lg" onclick="sendNotification()">
+                    <i class="fas fa-paper-plane"></i> إرسال الإشعار
+                </button>
+            </div>
+
+            <div class="notification-history">
+                <h3>سجل الإشعارات المرسلة</h3>
+                <div id="notification-history-list">
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>لم يتم إرسال أي إشعارات بعد</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-tab" class="tab-content">
+            <div class="content-header">
+                <h2><i class="fas fa-cog"></i> إعدادات التطبيق</h2>
+            </div>
+
+            <div class="settings-grid">
+                <div class="settings-card">
+                    <h3><i class="fas fa-upload"></i> إعدادات الرفع</h3>
+                    <div class="setting-item">
+                        <label>الحد الأقصى لحجم الصورة (MB)</label>
+                        <input type="number" id="max-image-size" value="10">
+                    </div>
+                    <div class="setting-item">
+                        <label>الحد الأقصى لحجم الفيديو (MB)</label>
+                        <input type="number" id="max-video-size" value="100">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveUploadSettings()">
+                        <i class="fas fa-save"></i> حفظ
+                    </button>
+                </div>
+
+                <div class="settings-card">
+                    <h3><i class="fas fa-shield-alt"></i> إعدادات الأمان</h3>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="enable-moderation">
+                            تفعيل الإشراف التلقائي
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="require-approval">
+                            يتطلب موافقة على التسجيل
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSecuritySettings()">
+                        <i class="fas fa-save"></i> حفظ
+                    </button>
+                </div>
+
+                <div class="settings-card">
+                    <h3><i class="fas fa-tools"></i> وضع الصيانة</h3>
+                    <div class="setting-item">
+                        <label>
+                            <input type="checkbox" id="maintenance-mode">
+                            تفعيل وضع الصيانة
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>رسالة الصيانة</label>
+                        <textarea id="maintenance-message" rows="3">التطبيق قيد الصيانة حالياً</textarea>
+                    </div>
+                    <button class="btn btn-warning" onclick="toggleMaintenanceMode()">
+                        <i class="fas fa-wrench"></i> تطبيق
+                    </button>
+                </div>
+
+                <div class="settings-card">
+                    <h3><i class="fas fa-database"></i> إدارة البيانات</h3>
+                    <button class="btn btn-info" onclick="backupDatabase()">
+                        <i class="fas fa-download"></i> نسخ احتياطي
+                    </button>
+                    <button class="btn btn-warning" onclick="clearCache()">
+                        <i class="fas fa-broom"></i> مسح الذاكرة المؤقتة
+                    </button>
+                    <button class="btn btn-danger" onclick="confirmDatabaseReset()">
+                        <i class="fas fa-exclamation-triangle"></i> إعادة تعيين
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Logs Tab -->
+        <div id="logs-tab" class="tab-content">
+            <div class="content-header">
+                <h2><i class="fas fa-history"></i> سجل النشاطات</h2>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="exportToCSV('logs')">
+                        <i class="fas fa-download"></i> تصدير
+                    </button>
+                    <button class="btn btn-danger" onclick="clearLogs()">
+                        <i class="fas fa-trash"></i> مسح السجل
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-bar">
+                <select id="logs-type-filter" onchange="filterLogs()">
+                    <option value="">كل الأنواع</option>
+                    <option value="user">مستخدم</option>
+                    <option value="post">منشور</option>
+                    <option value="chat">محادثة</option>
+                    <option value="system">نظام</option>
+                </select>
+                <select id="logs-action-filter" onchange="filterLogs()">
+                    <option value="">كل الإجراءات</option>
+                    <option value="create">إنشاء</option>
+                    <option value="update">تحديث</option>
+                    <option value="delete">حذف</option>
+                    <option value="approve">موافقة</option>
+                    <option value="reject">رفض</option>
+                </select>
+                <input type="date" id="logs-date-filter" onchange="filterLogs()">
+            </div>
+
+            <div class="table-container">
+                <table id="logs-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>النوع</th>
+                            <th>الإجراء</th>
+                            <th>التفاصيل</th>
+                            <th>المسؤول</th>
+                            <th>التاريخ والوقت</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-tbody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <i class="fas fa-clipboard-list"></i>
+                                <p>لا توجد سجلات بعد</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="logs-pagination"></div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-user-edit"></i> تعديل بيانات المستخدم</h3>
+                <button class="close-btn" onclick="closeModal('edit-user-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-group">
+                    <label>الاسم</label>
+                    <input type="text" id="edit-user-name">
+                </div>
+                <div class="form-group">
+                    <label>البريد الإلكتروني</label>
+                    <input type="email" id="edit-user-email">
+                </div>
+                <div class="form-group">
+                    <label>المركز</label>
+                    <select id="edit-user-position">
+                        <option value="goalkeeper">حارس مرمى</option>
+                        <option value="defender">مدافع</option>
+                        <option value="midfielder">وسط</option>
+                        <option value="forward">مهاجم</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>الحالة</label>
+                    <select id="edit-user-status">
+                        <option value="active">نشط</option>
+                        <option value="pending">قيد الانتظار</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('edit-user-modal')">إلغاء</button>
+                <button class="btn btn-primary" onclick="saveUserEdit()">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Post Modal -->
+    <div id="edit-post-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> تعديل المنشور</h3>
+                <button class="close-btn" onclick="closeModal('edit-post-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="edit-post-id">
+                <div class="form-group">
+                    <label>المحتوى</label>
+                    <textarea id="edit-post-caption" rows="4"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>الحالة</label>
+                    <select id="edit-post-status">
+                        <option value="visible">مرئي</option>
+                        <option value="hidden">مخفي</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('edit-post-modal')">إلغاء</button>
+                <button class="btn btn-primary" onclick="savePostEdit()">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- View User Details Modal -->
+    <div id="view-user-modal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3><i class="fas fa-user"></i> تفاصيل المستخدم</h3>
+                <button class="close-btn" onclick="closeModal('view-user-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="user-details-grid">
+                    <div class="user-detail-card">
+                        <div class="user-detail-header">
+                            <img id="view-user-image" src="" alt="Profile" class="user-detail-avatar">
+                            <div>
+                                <h4 id="view-user-name">-</h4>
+                                <p id="view-user-email" class="text-muted">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="user-detail-card">
+                        <h5><i class="fas fa-info-circle"></i> المعلومات الأساسية</h5>
+                        <div class="detail-row">
+                            <span class="detail-label">المعرف:</span>
+                            <span id="view-user-id">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">المركز:</span>
+                            <span id="view-user-position">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">الهاتف:</span>
+                            <span id="view-user-phone">-</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">الحالة:</span>
+                            <span id="view-user-status">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="user-detail-card">
+                        <h5><i class="fas fa-chart-bar"></i> الإحصائيات</h5>
+                        <div class="detail-row">
+                            <span class="detail-label">عدد المنشورات:</span>
+                            <span id="view-user-posts">0</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">عدد المحادثات:</span>
+                            <span id="view-user-chats">0</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">تاريخ التسجيل:</span>
+                            <span id="view-user-created">-</span>
+                        </div>
+                    </div>
+                    
+                    <div class="user-detail-card full-width">
+                        <h5><i class="fas fa-align-left"></i> النبذة الشخصية</h5>
+                        <p id="view-user-bio" class="bio-text">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('view-user-modal')">إغلاق</button>
+                <button class="btn btn-info" onclick="editUserFromDetails()"><i class="fas fa-edit"></i> تعديل</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- JavaScript -->
+    <script src="dashboard.js"></script>
+</body>
+</html>

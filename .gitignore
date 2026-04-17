@@ -1,0 +1,56 @@
+﻿node_modules/
+build/
+dist/
+coverage/
+.tmp/
+.cache/
+.next/
+out/
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.ppk
+*.log
+*.zip
+*.sql
+
+backup_before_merge
+newSquadKey
+newSquadKey.pem
+Squad key
+Squad Private key
+backend.tar.gz
+backend/s3-backup/
+
+# Flutter / Dart
+.dart_tool/
+.packages
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Node
+node_modules/
+
+# Backend heavy data
+backend/s3-backup/
+backend/storage/
+
+# Generated/public uploads (optional but recommended)
+backend/public/ads/
+backend/assets/images/

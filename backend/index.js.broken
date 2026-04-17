@@ -1,0 +1,64 @@
+require("dotenv").config();
+const express = require("express");
+const db = require("./db");
+
+// --- App Configuration ---
+const app = express();
+const PORT = process.env.PORT || 3000;
+app.use(express.json());
+app.use("/uploads", express.static("uploads"));
+app.use("/assets", express.static("assets"));
+app.use(express.static("public"));  // ← ADDED THIS LINE TO SERVE AVATARS
+
+// --- API Routes ---
+const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/admin");
+const postRoutes = require("./routes/posts");
+const userRoutes = require("./routes/user");
+const chatRoutes = require("./routes/chat");
+const careerRoutes = require('./routes/career');
+const commentRoutes = require('./routes/comments');
+
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/chats", chatRoutes);
+app.use('/api/career', careerRoutes);
+app.use('/api', commentRoutes);
+
+// --- Root Route for Health Check ---
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "SQUAD API is running!" });
+});
+
+// --- Start the Server ---
+const startServer = async () => {
+  try {
+    await db.query("SELECT 1");
+    console.log("✅ Database connection successful.");
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running and listening on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error(
+      "❌ Could not connect to the database. Please check your .env file and database status."
+    );
+    console.error("Error:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();
+// Debug: List all registered routes
+console.log('\n=== Registered Routes ===' );
+app._router.stack.forEach(function(r){
+  if (r.route && r.route.path){
+    console.log(r.route.path)
+  } else if (r.name === 'router') {
+    r.handle.stack.forEach(function(rr){
+      if (rr.route) console.log(rr.route.path)
+    })
+  }
+});
+console.log('========================\n');

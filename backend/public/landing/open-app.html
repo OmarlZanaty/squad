@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Opening Squad...</title>
+
+  <script>
+  function openApp() {
+  console.log("openApp function is triggered");
+
+  // Support query parameters (?type=profile&id=123). Fallback to path segments (/profile/123)
+  const urlParams = new URLSearchParams(window.location.search);
+  let type = urlParams.get('type');
+  let id   = urlParams.get('id');
+
+  if (!type || !id) {
+    const parts = window.location.pathname.split("/");
+    type = parts[1];
+    id   = parts[2];
+  }
+
+  console.log(`Type: ${type}, ID: ${id}`);
+
+  if (!type || !id) {
+    window.location.href = "/";
+    return;
+  }
+
+  const deepLink = `squad://${type}/${id}`;
+  const storeLink = "https://play.google.com/store/apps/details?id=com.mohamed_helicopter.squad"; // Android Store link
+
+  const startTime = Date.now();
+
+  // Try to open the app using the deep link
+  console.log("Attempting deep link:", deepLink);
+  window.location.href = deepLink;
+
+  // If app didn't open, redirect to store after 1.5 seconds
+  setTimeout(function() {
+    if (Date.now() - startTime < 1500) {
+      console.log("Redirecting to store...");
+      window.location.href = storeLink;
+    }
+  }, 1500);
+}
+  </script>
+</head>
+
+<body onload="openApp()" style="font-family:sans-serif;text-align:center;padding-top:100px">
+  <h2>Opening Squad App...</h2>
+  <p>If nothing happens, you will be redirected to the store.</p>
+</body>
+</html>

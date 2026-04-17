@@ -1,0 +1,118 @@
+const db = require('../db');
+
+// Get all comments for a specific post
+exports.getComments = async (req, res) => {
+    const { postId } = req.params;
+
+    try {
+        const sql = `
+            SELECT 
+                c.id,
+                c.post_id,
+                c.user_id,
+                c.comment_text,
+                c.created_at,
+                u.name as user_name,
+                u.profile_photo_url as user_photo,
+                u.type as user_type
+            FROM comments c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.post_id = ?
+            ORDER BY c.created_at DESC
+        `;
+
+        const [comments] = await db.query(sql, [postId]);
+        res.status(200).json(comments);
+    } catch (error) {
+        console.error('Get Comments Error:', error);
+        res.status(500).json({ message: 'Server error while fetching comments.' });
+    }
+};
+
+// Add a new comment to a post
+exports.addComment = async (req, res) => {
+    const { postId } = req.params;
+    const userId = req.user.id; // From JWT middleware
+    const { comment_text } = req.body;
+
+    if (!comment_text || comment_text.trim() === '') {
+        return res.status(400).json({ message: 'Comment text is required.' });
+    }
+
+    try {
+        // Insert the comment
+        const insertSql = 'INSERT INTO comments (post_id, user_id, comment_text) VALUES (?, ?, ?)';
+        const [result] = await db.query(insertSql, [postId, userId, comment_text.trim()]);
+
+        // Get the created comment with user info
+        const selectSql = `
+            SELECT 
+                c.id,
+                c.post_id,
+                c.user_id,
+                c.comment_text,
+                c.created_at,
+                u.name as user_name,
+                u.profile_photo_url as user_photo,
+                u.type as user_type
+            FROM comments c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.id = ?
+        `;
+
+        const [comments] = await db.query(selectSql, [result.insertId]);
+
+        if (comments.length === 0) {
+            return res.status(404).json({ message: 'Comment created but not found.' });
+        }
+
+        res.status(201).json(comments[0]);
+    } catch (error) {
+        console.error('Add Comment Error:', error);
+        res.status(500).json({ message: 'Server error while adding comment.' });
+    }
+};
+
+// Delete a comment (only the owner can delete)
+exports.deleteComment = async (req, res) => {
+    const { commentId } = req.params;
+    const userId = req.user.id; // From JWT middleware
+
+    try {
+        // Check if the comment exists and belongs to the user
+        const checkSql = 'SELECT user_id FROM comments WHERE id = ?';
+        const [comments] = await db.query(checkSql, [commentId]);
+
+        if (comments.length === 0) {
+            return res.status(404).json({ message: 'Comment not found.' });
+        }
+
+        if (comments[0].user_id !== userId) {
+            return res.status(403).json({ message: 'You can only delete your own comments.' });
+        }
+
+        // Delete the comment
+        const deleteSql = 'DELETE FROM comments WHERE id = ?';
+        await db.query(deleteSql, [commentId]);
+
+        res.status(200).json({ message: 'Comment deleted successfully.' });
+    } catch (error) {
+        console.error('Delete Comment Error:', error);
+        res.status(500).json({ message: 'Server error while deleting comment.' });
+    }
+};
+
+// Get comment count for a post
+exports.getCommentCount = async (req, res) => {
+    const { postId } = req.params;
+
+    try {
+        const sql = 'SELECT COUNT(*) as comment_count FROM comments WHERE post_id = ?';
+        const [result] = await db.query(sql, [postId]);
+
+        res.status(200).json({ comment_count: result[0].comment_count });
+    } catch (error) {
+        console.error('Get Comment Count Error:', error);
+        res.status(500).json({ message: 'Server error while counting comments.' });
+    }
+};

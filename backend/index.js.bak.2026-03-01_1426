@@ -1,0 +1,154 @@
+require("dotenv").config();
+
+const express = require("express");
+const cors = require("cors");
+const path = require("path");
+const morgan = require("morgan");
+
+const db = require("./db");
+
+const Auth = require('./routes/auth');
+// =======================
+// App Configuration
+// =======================
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+const path = require("path");
+const adsRoutes = require("./routes/ads.routes");
+
+// =======================
+// Request Logger
+// =======================
+app.use((req, res, next) => {
+  console.log(`📨 Incoming: ${req.method} ${req.path}`);
+  next();
+});
+
+
+// =======================
+// Logging Middleware
+// =======================
+app.use(morgan("dev"));
+
+// =======================
+// CORS Configuration (FIXED)
+// =======================
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-admin-key" // ✅ FIX
+    ],
+  })
+);
+
+// =======================
+// Body Parsers
+// =======================
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// =======================
+// Static Files
+// =======================
+app.use("/api/auth", require("./routes/auth"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/assets", express.static(path.join(__dirname, "assets")));
+app.use("/public", express.static(path.join(__dirname, "public")));
+
+// =======================
+// ADMIN DASHBOARD (STATIC)
+// =======================
+app.use("/admin", express.static(path.join(__dirname, "admin")));
+
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "admin", "index.html"));
+});
+
+// =======================
+// Attach DB
+// =======================
+app.set("db", db);
+
+// =======================
+// API ROUTES
+// =======================
+
+
+
+// serve public folder
+
+// mount routes
+app.use("/api", adsRoutes);
+
+// Core
+app.use("/api/posts", require("./routes/posts"));
+app.use("/api/users", require("./routes/user"));
+app.use("/api/chats", require("./routes/chat"));
+app.use("/api/messages", require("./routes/messages"));
+app.use("/api/comments", require("./routes/comments"));
+app.use("/api/notifications", require("./routes/notifications"));
+app.use("/api/media", require("./routes/media"));
+app.use("/api/career", require("./routes/career"));
+
+// Admin
+app.use("/api/admin/dashboard", require("./backend_admin_routes_no_auth")); // 📊 DASHBOARD (NO AUTH)
+app.use("/api/admin", require("./routes/admin")); // 🔒 SECURED
+
+// =======================
+// Compliance
+// =======================
+app.use("/", require("./routes/compliance"));
+
+// =======================
+// Admin Test
+// =======================
+app.get("/__admin_test", (req, res) => {
+  res.sendFile(path.join(__dirname, "admin", "index.html"));
+});
+
+// =======================
+// Health Check
+// =======================
+app.get("/", (req, res) => {
+  res.json({ message: "SQUAD API is running!" });
+});
+
+// =======================
+// Error Handler
+// =======================
+// =======================
+// Error Handler
+// =======================
+app.use((err, req, res, next) => {
+  console.error("🔥 Error:", err.message);
+  console.error("Stack:", err.stack);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    message: err.message || "Internal server error",
+  });
+});
+
+// =======================
+// Start Server
+// =======================
+const startServer = async () => {
+  try {
+    await db.query("SELECT 1");
+    console.log("✅ Database connection successful");
+
+app.listen(PORT, "0.0.0.0", () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+      console.log(`📊 Admin Dashboard: http://localhost:${PORT}/admin`);
+    });
+  } catch (error) {
+    console.error("❌ DB connection failed:", error.message);
+    process.exit(1);
+  }
+};
+
+startServer();

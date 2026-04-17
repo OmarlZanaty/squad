@@ -1,0 +1,129 @@
+const db = require('../db');
+
+exports.createPost = async (req, res) => {
+       const { caption } = req.body || {}; // <-- THE FIX IS HERE
+
+    const userId = req.user.id; // We get this from the JWT middleware
+
+    if (!req.file) {
+        return res.status(400).json({ message: 'No media file uploaded.' });
+    }
+
+    // Construct the URL to access the file
+    const mediaUrl = `/uploads/posts/media/${req.file.filename}`;
+    const mediaType = req.file.mimetype.startsWith('image') ? 'image' : 'video';
+
+    try {
+        const sql = "INSERT INTO posts (user_id, media_type, media_url, caption) VALUES (?, ?, ?, ?)";
+        await db.query(sql, [userId, mediaType, mediaUrl, caption]);
+
+        res.status(201).json({ message: 'Post created successfully.', mediaUrl: mediaUrl });
+    } catch (error) {
+        console.error("Post Creation Error:", error);
+        res.status(500).json({ message: 'Server error while creating post.' });
+    }
+};
+// Add this new function at the end of the file
+
+exports.getPosts = async (req, res) => {
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    // Filters
+    const { country, position } = req.query;
+    
+    // Get user ID from token (if authenticated)
+    const userId = req.user ? req.user.id : null;
+
+    try {
+        let sql = `
+            SELECT
+                p.id, p.user_id, p.media_type, p.media_url, p.caption, p.created_at,
+                u.name as author_name, u.profile_photo_url as author_photo, u.country, u.position,
+                u.type as author_type,
+                COALESCE(SUM(CASE WHEN r.reaction_type = 'like' THEN 1 ELSE 0 END), 0) as like_count,
+                COALESCE(SUM(CASE WHEN r.reaction_type = 'love' THEN 1 ELSE 0 END), 0) as love_count,
+                COALESCE(SUM(CASE WHEN r.reaction_type = 'talent' THEN 1 ELSE 0 END), 0) as talent_count,
+                COALESCE(SUM(CASE WHEN r.reaction_type = 'amazing' THEN 1 ELSE 0 END), 0) as amazing_count,
+                MAX(CASE WHEN r.user_id = ? THEN r.reaction_type ELSE NULL END) as user_reaction
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            LEFT JOIN reactions r ON p.id = r.post_id
+            WHERE 1=1
+        `;
+
+        const params = [userId || 0];
+
+        if (country) {
+            sql += ` AND u.country = ?`;
+            params.push(country);
+        }
+
+        if (position) {
+            sql += ` AND u.position = ?`;
+            params.push(position);
+        }
+
+        sql += ` GROUP BY p.id, p.user_id, p.media_type, p.media_url, p.caption, p.created_at,
+                 u.name, u.profile_photo_url, u.country, u.position, u.type
+                 ORDER BY p.created_at DESC LIMIT ? OFFSET ?`;
+        params.push(limit, offset);
+
+        const [posts] = await db.query(sql, params);
+
+        res.status(200).json(posts);
+
+    } catch (error) {
+        console.error("Get Posts Error:", error);
+        res.status(500).json({ message: 'Server error while fetching posts.' });
+    }
+};
+// Add this at the end of controllers/postController.js
+exports.reactToPost = async (req, res) => {
+    const userId = req.user.id;
+    const { id: postId } = req.params;
+    const { reaction_type } = req.body;
+
+    const validReactions = ['like', 'love', 'talent', 'amazing'];
+    if (!reaction_type || !validReactions.includes(reaction_type)) {
+        return res.status(400).json({ message: "Invalid reaction type." });
+    }
+
+    try {
+        // Using INSERT ... ON DUPLICATE KEY UPDATE to handle both new reactions and changing existing ones
+        const sql = "INSERT INTO reactions (post_id, user_id, reaction_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE reaction_type = ?";
+        await db.query(sql, [postId, userId, reaction_type, reaction_type]);
+        res.status(201).json({ message: `Reacted to post ${postId} with ${reaction_type}.` });
+    } catch (error) {
+        console.error("Reaction Error:", error);
+        res.status(500).json({ message: "Server error while reacting to post." });
+    }
+};
+
+exports.getPostById = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const sql = `
+            SELECT 
+                p.id, p.user_id, p.media_type, p.media_url, p.caption, p.created_at,
+                u.name as author_name, u.profile_photo_url as author_photo, u.country, u.position
+            FROM posts p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.id = ?
+        `;
+
+        const [posts] = await db.query(sql, [id]);
+
+        if (posts.length === 0) {
+            return res.status(404).json({ message: 'Post not found.' });
+        }
+
+        res.status(200).json(posts[0]);
+    } catch (error) {
+        console.error("Get Post By ID Error:", error);
+        res.status(500).json({ message: 'Server error while fetching post.' });
+    }
+};

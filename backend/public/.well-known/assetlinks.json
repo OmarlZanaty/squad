@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.mohamed_helicopter.squad",
+      "sha256_cert_fingerprints": [
+        "43:38:F9:A4:86:C3:21:24:2B:35:7B:53:16:B1:E6:45:57:E7:B9:8C:A5:40:E3:7D:6C:61:A9:29:EC:45:66:02"
+      ]
+    }
+  }
+]

@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - إدارة المنصة</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 280px;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 20px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 10px;
+        }
+
+        .sidebar-menu a {
+            display: block;
+            padding: 12px 15px;
+            color: #ecf0f1;
+            text-decoration: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: #667eea;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 28px;
+            color: #2c3e50;
+        }
+
+        /* STATS */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        /* SECTION */
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .section-header h2 {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .section-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* FILTERS */
+        .filters {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* TABLE */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #ecf0f1;
+        }
+
+        th {
+            padding: 12px;
+            text-align: right;
+            font-weight: 600;
+            color: #2c3e50;
+            border-bottom: 2px solid #bdc3c7;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-buttons .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* BUTTONS */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .btn-warning {
+            background: #f39c12;
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d68910;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .modal-header h2 {
+            font-size: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .modal-actions button {
+            flex: 1;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #bdc3c7;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .pagination button:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filters {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div id="changePasswordModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🔐 تغيير كلمة المرور</h2>
+      <button class="close-btn" onclick="closeModal('changePasswordModal')">&times;</button>
+    </div>
+
+    <div style="margin-bottom:10px; color:#555;">
+      المستخدم: <strong id="cp_userLabel">-</strong>
+    </div>
+
+    <form id="changePasswordForm">
+      <div class="form-group">
+        <label>كلمة المرور الجديدة</label>
+        <input type="password" id="cp_newPass" minlength="6" required />
+      </div>
+
+      <div class="form-group">
+        <label>تأكيد كلمة المرور</label>
+        <input type="password" id="cp_confirmPass" minlength="6" required />
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('changePasswordModal')">إلغاء</button>
+        <button type="submit" class="btn btn-primary">💾 حفظ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<body>
+    <div class="container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>🛡️ لوحة التحكم</h1>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" onclick="switchView('dashboard', event)" class="active">📊 لوحة المعلومات</a></li>
+                <li><a href="#" onclick="switchView('users', event)">👥 المستخدمون</a></li>
+                <li><a href="#" onclick="switchView('vipUsers', event)">⭐ مستخدموا VIP</a></li>
+                <li><a href="#" onclick="switchView('posts', event)">📝 المنشورات</a></li>
+                <li><a href="#" onclick="switchView('comments', event)">💬 التعليقات</a></li>
+                <li><a href="#" onclick="switchView('reports', event)">🚨 التقارير</a></li>
+                <li><a href="#" onclick="switchView('audit', event)">📋 السجلات</a></li>
+                <li><a href="#" onclick="switchView('ads', event)">📢 الإعلانات</a></li>
+                <li><a href="#" onclick="switchView('settings', event)">⚙️ الإعدادات</a></li>
+            </ul>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- DASHBOARD -->
+            <section id="dashboardSection" class="section active">
+                <div class="header">
+                    <h1>📊 لوحة المعلومات</h1>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>إجمالي المستخدمين</h3>
+                        <div class="value" id="totalUsers">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>المستخدمون النشطون</h3>
+                        <div class="value" id="activeUsers">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>إجمالي المنشورات</h3>
+                        <div class="value" id="totalPosts">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <h3>المنشورات المعلقة</h3>
+                        <div class="value" id="pendingPosts">-</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- USERS -->
+            <section id="usersSection" class="section">
+                <div class="section-header">
+                    <h2>👥 إدارة المستخدمين</h2>
+                    <div class="section-actions">
+                        <input type="text" id="userSearch" placeholder="بحث..." style="padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px;">
+                    </div>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>الحالة</label>
+                        <select id="userStatusFilter" onchange="loadUsers(1)">
+                            <option value="">الكل</option>
+                            <option value="active">نشط</option>
+                            <option value="pending">معلق</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>النوع</label>
+                        <select id="userTypeFilter" onchange="loadUsers(1)">
+                            <option value="">الكل</option>
+                            <option value="player">لاعب</option>
+                            <option value="scout">كشاف</option>
+                            <option value="guest">ضيف</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المعرف</th>
+                                <th>الاسم</th>
+                                <th>البريد</th>
+                                <th>الهاتف</th> <!-- NEW -->
+                                <th>النوع</th>
+                                <th>الحالة</th>
+                                <th>التقييم</th>
+                                <th>VIP</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <tr><td colspan="8" class="loading">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="usersPagination"></div>
+            </section>
+
+            <!-- VIP USERS -->
+<section id="vipUsersSection" class="section">
+  <div class="section-header">
+    <h2>⭐ قائمة مستخدمي VIP</h2>
+    <div class="section-actions">
+      <input type="text" id="vipUserSearch" placeholder="بحث..." style="padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px;">
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <label>الحالة</label>
+      <select id="vipUserStatusFilter" onchange="loadVipUsers(1)">
+        <option value="">الكل</option>
+        <option value="active">نشط</option>
+        <option value="pending">معلق</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>النوع</label>
+      <select id="vipUserTypeFilter" onchange="loadVipUsers(1)">
+        <option value="">الكل</option>
+        <option value="player">لاعب</option>
+        <option value="scout">كشاف</option>
+        <option value="guest">ضيف</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>المعرف</th>
+          <th>الاسم</th>
+          <th>البريد</th>
+          <th>النوع</th>
+          <th>الحالة</th>
+          <th>التقييم</th>
+          <th>VIP</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="vipUsersTable">
+        <tr><td colspan="8" class="loading">جاري التحميل...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination" id="vipUsersPagination"></div>
+</section>
+
+            <!-- POSTS -->
+            <section id="postsSection" class="section">
+                <div class="section-header">
+                    <h2>📝 إدارة المنشورات</h2>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>الحالة</label>
+                        <select id="postStatusFilter" onchange="loadPosts(1)">
+                            <option value="">الكل</option>
+                            <option value="active">نشط</option>
+                            <option value="pending">معلق</option>
+                            <option value="rejected">مرفوض</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المعرف</th>
+                                <th>المستخدم</th>
+                                <th>الوصف</th>
+                                <th>الحالة</th>
+                                <th>المشاهدات</th>
+                                <th>التعليقات</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="postsTable">
+                            <tr><td colspan="7" class="loading">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="postsPagination"></div>
+            </section>
+
+            <!-- COMMENTS -->
+            <section id="commentsSection" class="section">
+                <div class="section-header">
+                    <h2>💬 إدارة التعليقات</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المعرف</th>
+                                <th>المستخدم</th>
+                                <th>التعليق</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="commentsTable">
+                            <tr><td colspan="5" class="loading">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- REPORTS -->
+            <section id="reportsSection" class="section">
+                <div class="section-header">
+                    <h2>🚨 التقارير والشكاوى</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المعرف</th>
+                                <th>المبلغ</th>
+                                <th>السبب</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportsTable">
+                            <tr><td colspan="5" class="loading">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- AUDIT LOG -->
+            <section id="auditSection" class="section">
+                <div class="section-header">
+                    <h2>📋 سجل العمليات</h2>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>المعرف</th>
+                                <th>المسؤول</th>
+                                <th>الإجراء</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTable">
+                            <tr><td colspan="4" class="loading">جاري التحميل...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="adsSection" class="section">
+  <div class="section-header">
+    <h2>📢 إدارة الإعلانات (3 خانات)</h2>
+  </div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>الخانة</th>
+          <th>العنوان</th>
+          <th>الوصف</th>
+          <th>الصورة</th>
+          <th>الإجراءات</th>
+        </tr>
+      </thead>
+      <tbody id="adsTable">
+        <tr><td colspan="5" class="loading">جاري التحميل...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+            <!-- SETTINGS -->
+            <section id="settingsSection" class="section">
+                <div class="section-header">
+                    <h2>⚙️ الإعدادات</h2>
+                </div>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                    <div class="form-group">
+                        <label>اسم المنصة</label>
+                        <input type="text" value="منصة سكواد">
+                    </div>
+                    <div class="form-group">
+                        <label>البريد الإلكتروني للدعم</label>
+                        <input type="email" value="support@squad.com">
+                    </div>
+                    <button class="btn btn-primary">💾 حفظ</button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODALS -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>تعديل المستخدم</h2>
+                <button class="close-btn" onclick="closeModal('editUserModal')">&times;</button>
+            </div>
+            <form id="editUserForm">
+                <div class="form-group">
+                    <label>الاسم</label>
+                    <input type="text" id="editUserName" required>
+                </div>
+                <div class="form-group">
+                    <label>النوع</label>
+                    <select id="editUserType" required>
+                        <option value="player">لاعب</option>
+                        <option value="scout">كشاف</option>
+                        <option value="guest">ضيف</option>
+                        <option value="admin">مسؤول</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>الحالة</label>
+                    <select id="editUserStatus" required>
+                        <option value="active">نشط</option>
+                        <option value="pending">معلق</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editUserModal')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">💾 حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- USER DETAIL MODAL -->
+<!-- USER DETAIL MODAL -->
+<div id="userDetailModal" class="modal">
+  <div class="modal-content" style="max-width: 1000px; width: 95vw; max-height: 90vh; overflow-y: auto; padding: 20px;">
+
+    <div class="modal-header">
+      <h2>تفاصيل المستخدم</h2>
+      <button class="close-btn" onclick="closeModal('userDetailModal')">&times;</button>
+    </div>
+
+    <div class="user-modal-layout">
+
+      <!-- LEFT: USER INFO -->
+      <div class="user-info">
+        <div style="margin-bottom: 20px;">
+          <h3>الصور</h3>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div style="text-align: center;">
+              <p style="margin-bottom: 8px; font-weight: bold;">صورة الملف الشخصي</p>
+              <img id="userDetailPhoto" src="" style="width: 100%; border-radius: 10px; max-height: 200px; object-fit: cover; display: none;">
+              <div id="userDetailPhotoPlaceholder" style="height: 200px; background: #eee; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                لا توجد صورة
+              </div>
+            </div>
+
+            <div style="text-align: center;">
+              <p style="margin-bottom: 8px; font-weight: bold;">صورة الغلاف</p>
+              <img id="userDetailCover" src="" style="width: 100%; border-radius: 10px; max-height: 200px; object-fit: cover; display: none;">
+              <div id="userDetailCoverPlaceholder" style="height: 200px; background: #eee; border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                لا توجد صورة
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- USER INFO -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div>
+            <p><strong>الاسم:</strong> <span id="userDetailName"></span></p>
+            <p><strong>البريد:</strong> <span id="userDetailEmail"></span></p>
+            <p><strong>الهاتف:</strong> <span id="userDetailPhone"></span></p>
+            <p><strong>النوع:</strong> <span id="userDetailType"></span></p>
+            <p><strong>الحالة:</strong> <span id="userDetailStatus"></span></p>
+          </div>
+
+          <div>
+            <p><strong>المركز:</strong> <span id="userDetailPosition"></span></p>
+            <p><strong>النادي:</strong> <span id="userDetailClub"></span></p>
+            <p><strong>العمر:</strong> <span id="userDetailAge"></span></p>
+            <p><strong>التاريخ:</strong> <span id="userDetailCreated"></span></p>
+          </div>
+        </div>
+
+        <!-- BIO -->
+        <div style="margin-top: 15px;">
+          <h3>السيرة الذاتية</h3>
+          <p id="userDetailBio" style="background:#f5f5f5; padding:10px; border-radius:6px;"></p>
+        </div>
+
+        <!-- ACTIONS -->
+        <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <button class="btn btn-primary" onclick="editUserModal(currentUserId)">تعديل</button>
+          <button class="btn btn-warning" onclick="openChangePassword(currentUserId)">🔐 كلمة المرور</button>
+          <button class="btn btn-danger" onclick="banUser(currentUserId)">حظر</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: POSTS -->
+      <div class="user-posts">
+        <h3 style="margin-bottom: 10px;">📝 المنشورات</h3>
+
+        <div id="userPostsContainer">
+          <div class="loading">جاري التحميل...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    <!-- POST DETAIL MODAL -->
+    <div id="postDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2>تفاصيل المنشور</h2>
+                <button class="close-btn" onclick="closeModal('postDetailModal')">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div style="margin-bottom: 20px;">
+                    <h3>المحتوى الوسائطي</h3>
+                    <div id="postDetailMediaContainer" style="background: #f5f5f5; padding: 20px; border-radius: 10px; text-align: center; min-height: 300px; display: flex; align-items: center; justify-content: center;">
+                        <img id="postDetailImage" src="" style="max-width: 100%; max-height: 400px; border-radius: 10px; display: none;" alt="صورة المنشور">
+                        <video id="postDetailVideo" style="max-width: 100%; max-height: 400px; border-radius: 10px; display: none;" controls></video>
+                        <span id="postDetailNoMedia" style="color: #999;">لا توجد وسائط</span>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+                    <div>
+                        <p><strong>معرف المنشور:</strong> <span id="postDetailId"></span></p>
+                        <p><strong>المستخدم:</strong> <span id="postDetailUser"></span></p>
+                        <p><strong>نوع الوسائط:</strong> <span id="postDetailMediaType"></span></p>
+                        <p><strong>الحالة:</strong> <span id="postDetailStatus"></span></p>
+                    </div>
+                    <div>
+                        <p><strong>المشاهدات:</strong> <span id="postDetailViews"></span></p>
+                        <p><strong>التعليقات:</strong> <span id="postDetailComments"></span></p>
+                        <p><strong>مثبت:</strong> <span id="postDetailPinned"></span></p>
+                        <p><strong>مخفي:</strong> <span id="postDetailHidden"></span></p>
+                    </div>
+                </div>
+                <div>
+                    <h3>الوصف</h3>
+                    <p id="postDetailCaption" style="background: #f5f5f5; padding: 15px; border-radius: 5px; line-height: 1.6;"></p>
+                </div>
+                <div style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <button class="btn btn-success" onclick="approvePost(currentPostId)">✓ موافقة</button>
+                    <button class="btn btn-warning" onclick="rejectPost(currentPostId)">✗ رفض</button>
+                    <button class="btn btn-danger" onclick="deletePost(currentPostId)">🗑️ حذف</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

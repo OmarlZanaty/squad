@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <title>لوحة تحكم سكواد بلاير - Pro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+<div class="dashboard">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">⚽ سكواد بلاير</div>
+    
+    <div class="admin-info">
+      <div>مرحباً، <strong>أحمد</strong></div>
+      <span class="admin-role">Super Admin</span>
+    </div>
+    
+    <div class="nav-section">الإدارة الرئيسية</div>
+    <nav>
+      <a href="#users" class="active" onclick="switchView('users', event)">
+        👥 المستخدمون
+      </a>
+      <a href="#posts" onclick="switchView('posts', event)">
+        📝 المنشورات
+      </a>
+      <a href="#comments" onclick="switchView('comments', event)">
+        💬 التعليقات
+      </a>
+      <a href="#chats" onclick="switchView('chats', event)">
+        💬 المحادثات
+      </a>
+    </nav>
+    
+    <div class="nav-section">المراقبة</div>
+    <nav>
+      <a href="#reports" onclick="switchView('reports', event)">
+        🚨 البلاغات
+      </a>
+      <a href="#analytics" onclick="switchView('analytics', event)">
+        📊 الإحصائيات
+      </a>
+      <a href="#audit" onclick="switchView('audit', event)">
+        📜 سجل العمليات
+      </a>
+    </nav>
+    
+    <div class="nav-section">النظام</div>
+    <nav>
+      <a href="#database" onclick="switchView('database', event)">
+        🗄️ قاعدة البيانات
+      </a>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="content">
+
+    <!-- Users View -->
+    <div id="usersView">
+      <header class="topbar">
+        <h1>إدارة المستخدمين</h1>
+        <div class="search-box">
+          <input type="text" id="userSearch" placeholder="ابحث بالاسم أو البريد..." />
+          <button class="filter-btn" onclick="toggleFilters('userFilters')">
+            🔍 تصفية
+          </button>
+          <button class="export-btn" onclick="exportData('users')">
+            ⬇️ تصدير
+          </button>
+        </div>
+      </header>
+
+      <!-- Filter Panel -->
+      <div class="filter-panel" id="userFilters">
+        <div class="filter-grid">
+          <div class="filter-group">
+            <label>الحالة</label>
+            <select id="filterStatus" onchange="applyFilters()">
+              <option value="">الكل</option>
+              <option value="active">نشط</option>
+              <option value="pending">قيد المراجعة</option>
+              <option value="suspended">موقوف</option>
+              <option value="banned">محظور</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>النوع</label>
+            <select id="filterType" onchange="applyFilters()">
+              <option value="">الكل</option>
+              <option value="player">لاعب</option>
+              <option value="scout">كشاف</option>
+              <option value="guest">زائر</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>التاريخ</label>
+            <select id="filterDate" onchange="applyFilters()">
+              <option value="">الكل</option>
+              <option value="today">اليوم</option>
+              <option value="week">هذا الأسبوع</option>
+              <option value="month">هذا الشهر</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-secondary" onclick="clearFilters()">مسح الفلاتر</button>
+      </div>
+
+      <!-- Stats -->
+      <section class="stats">
+        <div class="stat">
+          <span class="stat-value" id="totalUsers">0</span>
+          <span class="stat-label">إجمالي المستخدمين</span>
+          <div class="stat-trend trend-up">↑ +12% هذا الشهر</div>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="activeUsers">0</span>
+          <span class="stat-label">مستخدمون نشطون</span>
+          <div class="stat-trend trend-up">↑ +8%</div>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="pendingUsers">0</span>
+          <span class="stat-label">قيد المراجعة</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="bannedUsers">0</span>
+          <span class="stat-label">محظور</span>
+        </div>
+      </section>
+
+      <!-- Users Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">قائمة المستخدمين (<span id="selectedCount">0</span> محدد)</div>
+          <div class="bulk-actions">
+            <button class="btn btn-warning" onclick="bulkActivate()" id="bulkActivateBtn" disabled>
+              ✓ تفعيل
+            </button>
+            <button class="btn btn-danger" onclick="bulkSuspend()" id="bulkSuspendBtn" disabled>
+              ⏸ إيقاف
+            </button>
+            <button class="btn btn-danger" onclick="bulkBan()" id="bulkBanBtn" disabled>
+              🚫 حظر
+            </button>
+          </div>
+        </div>
+        
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="checkbox" onchange="selectAll(this)"/></th>
+              <th>المستخدم</th>
+              <th>البريد الإلكتروني</th>
+              <th>النوع</th>
+              <th>الحالة</th>
+              <th>تاريخ الانضمام</th>
+              <th>آخر دخول</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+
+        <div class="pagination">
+          <div class="pagination-info">
+            عرض <span id="pageStart">0</span> - <span id="pageEnd">0</span> من <span id="pageTotal">0</span>
+          </div>
+          <div class="pagination-controls">
+            <button class="page-btn" onclick="prevPage()">السابق</button>
+            <button class="page-btn" onclick="nextPage()">التالي</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Posts View -->
+    <div id="postsView" style="display:none;">
+      <header class="topbar">
+        <h1>إدارة المنشورات</h1>
+        <div class="search-box">
+          <input type="text" id="postSearch" placeholder="ابحث في المنشورات..." />
+        </div>
+      </header>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="stat-value">1,249</span>
+          <span class="stat-label">إجمالي المنشورات</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">1,180</span>
+          <span class="stat-label">نشط</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">42</span>
+          <span class="stat-label">مخفي</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">27</span>
+          <span class="stat-label">قيد المراجعة</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">قائمة المنشورات</div>
+          <div class="bulk-actions">
+            <button class="btn btn-primary">✓ الموافقة</button>
+            <button class="btn btn-secondary">👁️ إخفاء</button>
+          </div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="checkbox"/></th>
+              <th>المعاينة</th>
+              <th>المستخدم</th>
+              <th>المحتوى</th>
+              <th>الحالة</th>
+              <th>المشاهدات</th>
+              <th>التاريخ</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="postsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Comments View -->
+    <div id="commentsView" style="display:none;">
+      <header class="topbar">
+        <h1>إدارة التعليقات</h1>
+      </header>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">التعليقات الأخيرة</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" class="checkbox"/></th>
+              <th>المستخدم</th>
+              <th>التعليق</th>
+              <th>المنشور</th>
+              <th>الحالة</th>
+              <th>التاريخ</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="commentsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Chats View -->
+    <div id="chatsView" style="display:none;">
+      <header class="topbar">
+        <h1>إدارة المحادثات</h1>
+      </header>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">المحادثات</div>
+        </div>
+        <div class="empty-state">
+          <div class="empty-state-icon">💬</div>
+          <div>لا توجد محادثات مبلغ عنها</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports View -->
+    <div id="reportsView" style="display:none;">
+      <header class="topbar">
+        <h1>إدارة البلاغات</h1>
+      </header>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">البلاغات المفتوحة</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>المُبلِّغ</th>
+              <th>نوع البلاغ</th>
+              <th>الهدف</th>
+              <th>السبب</th>
+              <th>الحالة</th>
+              <th>التاريخ</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="reportsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Analytics View -->
+    <div id="analyticsView" style="display:none;">
+      <header class="topbar">
+        <h1>الإحصائيات والتحليلات</h1>
+      </header>
+      
+      <section class="stats">
+        <div class="stat">
+          <span class="stat-value">847</span>
+          <span class="stat-label">مستخدم نشط اليوم</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">+23%</span>
+          <span class="stat-label">النمو هذا الشهر</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">1,249</span>
+          <span class="stat-label">منشور هذا الأسبوع</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">94%</span>
+          <span class="stat-label">معدل الاحتفاظ</span>
+        </div>
+      </section>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📈 نشاط المنصة</div>
+        </div>
+        <div style="padding: 60px 20px; text-align: center; color: #94a3b8;">
+          <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
+          <div>الرسوم البيانية التفاعلية قيد التطوير</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Audit Log View -->
+    <div id="auditView" style="display:none;">
+      <header class="topbar">
+        <h1>سجل عمليات المسؤولين</h1>
+      </header>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📜 آخر 100 عملية</div>
+          <button class="btn btn-secondary" onclick="exportData('audit')">⬇️ تصدير</button>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>المسؤول</th>
+              <th>الإجراء</th>
+              <th>النوع</th>
+              <th>الهدف</th>
+              <th>التفاصيل</th>
+              <th>التاريخ</th>
+            </tr>
+          </thead>
+          <tbody id="auditTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Database View -->
+    <div id="databaseView" style="display:none;">
+      <header class="topbar">
+        <h1>🗄️ إدارة قاعدة البيانات</h1>
+        <div style="background: #fef3c7; padding: 10px 16px; border-radius: 6px; color: #92400e; font-size: 13px;">
+          ⚠️ منطقة خطرة - للمسؤولين الأعلى فقط
+        </div>
+      </header>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">الجداول المتاحة</div>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>اسم الجدول</th>
+              <th>السجلات</th>
+              <th>الحجم</th>
+              <th>آخر تحديث</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>users</strong></td>
+              <td>156</td>
+              <td>2.1 MB</td>
+              <td>2024-12-26 14:30</td>
+              <td>
+                <div class="action-icons">
+                  <span class="action-icon" title="عرض">👁️</span>
+                  <span class="action-icon" title="تصدير">⬇️</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>posts</strong></td>
+              <td>1,249</td>
+              <td>5.3 MB</td>
+              <td>2024-12-26 15:12</td>
+              <td>
+                <div class="action-icons">
+                  <span class="action-icon">👁️</span>
+                  <span class="action-icon">⬇️</span>
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td><strong>audit_logs</strong></td>
+              <td>892</td>
+              <td>1.2 MB</td>
+              <td>2024-12-26 16:00</td>
+              <td>
+                <div class="action-icons">
+                  <span class="action-icon">👁️</span>
+                  <span class="action-icon">⬇️</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal" id="editUserModal">
+  <div class="modal-box">
+    <div class="modal-header">✏️ تعديل المستخدم</div>
+
+    <div class="form-group">
+      <label>الاسم الكامل</label>
+      <input type="text" id="editName" />
+    </div>
+
+    <div class="form-group">
+      <label>البريد الإلكتروني</label>
+      <input type="email" id="editEmail" disabled />
+    </div>
+
+    <div class="form-group">
+      <label>رقم الهاتف</label>
+      <input type="tel" id="editPhone" />
+    </div>
+
+    <div class="form-group">
+      <label>نوع المستخدم</label>
+      <select id="editType">
+        <option value="player">لاعب</option>
+        <option value="scout">كشاف</option>
+        <option value="guest">زائر</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>حالة الحساب</label>
+      <select id="editStatus">
+        <option value="active">نشط</option>
+        <option value="pending">قيد المراجعة</option>
+        <option value="suspended">موقوف مؤقتاً</option>
+        <option value="banned">محظور نهائياً</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>ملاحظات (اختياري)</label>
+      <textarea id="editNotes" placeholder="أضف ملاحظات حول هذا التعديل..."></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('editUserModal')">إلغاء</button>
+      <button class="btn btn-primary" onclick="saveUser()">💾 حفظ التغييرات</button>
+    </div>
+  </div>
+</div>
+
+<!-- View User Modal -->
+<div class="modal" id="viewUserModal">
+  <div class="modal-box">
+    <div class="modal-header">👤 تفاصيل المستخدم</div>
+    
+    <div style="text-align: center; margin: 20px 0;">
+      <div class="avatar" style="width: 80px; height: 80px; font-size: 32px; margin: 0 auto;" id="viewUserAvatar">أ</div>
+      <h3 style="margin-top: 12px;" id="viewUserName">أحمد محمد</h3>
+      <p style="color: #64748b; font-size: 14px;" id="viewUserEmail">ahmed@example.com</p>
+    </div>
+
+    <div class="form-group">
+      <label>النوع</label>
+      <div id="viewUserType">لاعب</div>
+    </div>
+
+    <div class="form-group">
+      <label>الحالة</label>
+      <div id="viewUserStatus"></div>
+    </div>
+
+    <div class="form-group">
+      <label>تاريخ الانضمام</label>
+      <div id="viewUserJoined">15 يناير 2024</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('viewUserModal')">إغلاق</button>
+      <button class="btn btn-primary" onclick="editUserFromView()">✏️ تعديل</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Dialog -->
+<div class="modal" id="confirmModal">
+  <div class="modal-box">
+    <div class="confirm-dialog">
+      <div class="confirm-icon" id="confirmIcon">⚠️</div>
+      <div class="confirm-message" id="confirmMessage">هل أنت متأكد؟</div>
+      <div class="confirm-details" id="confirmDetails">هذا الإجراء لا يمكن التراجع عنه</div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeModal('confirmModal')">إلغاء</button>
+        <button class="btn btn-danger" id="confirmActionBtn" onclick="confirmAction()">تأكيد</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>

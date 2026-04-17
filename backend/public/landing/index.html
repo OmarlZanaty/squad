@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Squad - منصة تسويق اللاعبين</title>
+  <meta name="description" content="Squad منصة تسويقية للاعبين الشباب لعرض المهارات وجذب اهتمام الأندية والكشافين والجماهير." />
+
+  <!-- Cairo font (LOCAL friendly option) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+  <!--
+    If someone navigates to /profile/:id or /post/:id and the request is served
+    by the landing page (due to missing rewrite rules on the host), redirect
+    immediately to the open‑app handler with query parameters. Placing this
+    in the <head> ensures the redirect runs before the rest of the page.
+  -->
+  <script>
+    (function() {
+      const parts = window.location.pathname.split('/');
+      if (parts.length >= 3 && (parts[1] === 'profile' || parts[1] === 'post')) {
+        const type = parts[1];
+        const id   = parts[2];
+        window.location.replace('/landing/open-app.html?type=' + type + '&id=' + id);
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <!-- Top bar -->
+<header class="topbar">
+  <div class="container topbar__inner">
+
+    <nav class="nav">
+      <a href="#features">المميزات</a>
+      <a href="#how">كيف يعمل</a>
+      <a href="#download">تحميل</a>
+    </nav>
+
+    <a class="brand" href="#top" aria-label="Squad">
+      <img src="./assets/logo.png" alt="Squad" class="brand__logo" />
+    </a>
+
+  </div>
+</header>
+
+  <!-- Hero -->
+  <main id="top" class="hero">
+    <div class="container hero__grid">
+      <section class="hero__content">
+        <div class="pill">
+          <span class="dot"></span>
+منصة تسويق اللعيبة الصاعدة لكرة القدم        </div>
+
+        <h1 class="hero__title">
+          مع إسكواد هتحقق الأمجاد 
+        </h1>
+
+        <p class="hero__subtitle">
+           تطبيق<strong>Squad</strong>   هو منصة تسويق اللعيبة الشباب لعرض مواهبهم وجذب انتباه الأندية والكشّافين والمتابعين
+نزّل التطبيق الآن وخلي موهبتك توصل للعالم كله</p>
+
+        <div class="hero__cta hero__cta--grid" id="download">
+  <div class="ctaGroup">
+    <div class="ctaGroup__title">تطبيق اللاعب</div>
+    <div class="ctaGroup__buttons">
+      <a class="btn btn--primary" href="#" id="playerAndroid">Android</a>
+      <a class="btn btn--secondary" href="#" id="playerIOS">iPhone</a>
+    </div>
+  </div>
+
+  <div class="ctaGroup">
+    <div class="ctaGroup__title">تطبيق المستكشف/المستخدم</div>
+    <div class="ctaGroup__buttons">
+      <a class="btn btn--primary" href="#" id="userAndroid">Android</a>
+      <a class="btn btn--secondary" href="#" id="userIOS">iPhone</a>
+    </div>
+  </div>
+</div>
+
+        
+
+        <div class="stats">
+          <div class="stat">
+            <div class="stat__num">+10000</div>
+            <div class="stat__label">لاعب</div>
+          </div>
+          <div class="stat">
+            <div class="stat__num">+300</div>
+            <div class="stat__label">مستكشف</div>
+          </div>
+          <div class="stat">
+            <div class="stat__num">+10مليون </div>
+            <div class="stat__label">مشجع</div>
+          </div>
+        </div>
+      </section>
+
+<aside class="hero__visual" aria-label="مزايا سريعة">
+  <div class="heroBox">
+    <h3 class="heroBox__title">ليه Squad؟</h3>
+
+    <div class="heroHighlights">
+      <div class="heroHighlight">
+        <div class="heroHighlight__icon">🎥</div>
+        <div class="heroHighlight__text">
+          <div class="heroHighlight__head">فيديوهات ومهارات</div>
+          <div class="heroHighlight__sub">ارفع أفضل لقطاتك بجودة عالية.</div>
+        </div>
+      </div>
+
+      <div class="heroHighlight">
+        <div class="heroHighlight__icon">⭐</div>
+        <div class="heroHighlight__text">
+          <div class="heroHighlight__head">فرص ظهور أعلى</div>
+          <div class="heroHighlight__sub">خلي الكشافين والأندية يشوفوك أسرع.</div>
+        </div>
+      </div>
+
+      <div class="heroHighlight">
+        <div class="heroHighlight__icon">📈</div>
+        <div class="heroHighlight__text">
+          <div class="heroHighlight__head">زيادة المشاهدات</div>
+          <div class="heroHighlight__sub">متابعين + تفاعل + زيارات للملف.</div>
+        </div>
+      </div>
+
+      <div class="heroHighlight">
+        <div class="heroHighlight__icon">🧾</div>
+        <div class="heroHighlight__text">
+          <div class="heroHighlight__head">ملف احترافي</div>
+          <div class="heroHighlight__sub">السن، الطول، المركز، النادي… كلها واضحة.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="heroBox__mini">
+      <span class="badge">واجهة عربية</span>
+      <span class="badge">تصميم جذاب</span>
+      <span class="badge">تجربة سريعة</span>
+    </div>
+  </div>
+</aside>
+    </div>
+  </main>
+
+  <!-- Features -->
+  <section id="features" class="section">
+    <div class="container">
+      <h2 class="section__title">مميزات Squad</h2>
+      <p class="section__subtitle">كل اللي تحتاجه عشان تعرض نفسك بشكل احترافي.</p>
+
+      <div class="cards">
+        <article class="card">
+          <div class="card__icon">🎥</div>
+          <h3>صور وفيديوهات بجودة عالية</h3>
+          <p>اعرض مهاراتك من خلال لقطات واضحة وملفات مرتبة في ملفك الشخصي.</p>
+        </article>
+
+        <article class="card">
+          <div class="card__icon">📈</div>
+          <h3>زيادة المشاهدات والمتابعين</h3>
+          <p>المحتوى يظهر لجمهور مهتم: كشافين، أندية، وجماهير.</p>
+        </article>
+
+        <article class="card">
+          <div class="card__icon">🧠</div>
+          <h3>ملف لاعب احترافي</h3>
+          <p>الطول، السن، المركز، النادي الحالي… كل شيء في مكان واحد.</p>
+        </article>
+
+        <article class="card">
+          <div class="card__icon">💬</div>
+          <h3>تواصل وبناء شبكة</h3>
+          <p>تابع الآخرين، تفاعل، وخلي اسمك ينتشر بشكل طبيعي.</p>
+        </article>
+
+        <article class="card">
+          <div class="card__icon">⭐</div>
+          <h3>تميّز VIP</h3>
+          <p>أقسام مميزة وفرص ظهور أعلى للاعبين المتميزين.</p>
+        </article>
+
+        <article class="card">
+          <div class="card__icon">🔒</div>
+          <h3>تحكم وخصوصية</h3>
+          <p>إدارة الحساب والمحتوى بسهولة، مع خيارات مناسبة للخصوصية.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section id="how" class="section section--alt">
+    <div class="container">
+      <h2 class="section__title">كيف يعمل؟</h2>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step__num">1</div>
+          <div class="step__body">
+            <h3>أنشئ حسابك</h3>
+            <p>سجل بياناتك الأساسية واختر مركزك ودولتك وناديك الحالي.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">2</div>
+          <div class="step__body">
+            <h3>ارفع أفضل لقطاتك</h3>
+            <p>صور وفيديوهات لمهاراتك ومبارياتك وتمارينك.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step__num">3</div>
+          <div class="step__body">
+            <h3>خلّي الكشافين يشوفوك</h3>
+            <p>تفاعلات، متابعين، وزيارات للملف الشخصي ترفع فرصتك.</p>
+          </div>
+        </div>
+      </div>
+<div class="downloadBox">
+  <div>
+    <h3>حمّل التطبيق الآن</h3>
+    <p>وخلي موهبتك توصل للعالم كله.</p>
+  </div>
+
+  <div class="downloadBox__grid">
+
+    <!-- Player App -->
+    <div class="ctaGroup">
+      <div class="ctaGroup__title">تطبيق اللاعب</div>
+      <div class="ctaGroup__buttons">
+        <a class="btn btn--primary" href="#" id="playerAndroid2">Android</a>
+        <a class="btn btn--secondary" href="#" id="playerIOS2">iPhone</a>
+      </div>
+    </div>
+
+    <!-- Scout / User App -->
+    <div class="ctaGroup">
+      <div class="ctaGroup__title">تطبيق الكشاف/المستخدم</div>
+      <div class="ctaGroup__buttons">
+        <a class="btn btn--primary" href="#" id="userAndroid2">Android</a>
+        <a class="btn btn--secondary" href="#" id="userIOS2">iPhone</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <img src="./assets/logo.png" alt="Squad" class="footer__logo" />
+        <div class="footer__text">
+          <div class="footer__title">Squad</div>
+          <div class="footer__sub">منصة تسويق اللاعبين</div>
+        </div>
+      </div>
+
+<nav class="nav">
+  <a href="#features">المميزات</a>
+  <a href="#how">كيف يعمل</a>
+  <a href="#download">تحميل</a>
+
+  <!-- NEW WhatsApp Link -->
+  <a href="https://wa.me/201003100623"
+   target="_blank"
+   class="nav__whatsapp">
+  تواصل معنا
+  <i class="fa-brands fa-whatsapp"></i>
+</a>
+</nav>
+
+      <div class="footer__copy">
+        © <span id="year"></span> Squad. جميع الحقوق محفوظة.
+      </div>
+    </div>
+</footer>
+
+  <!-- Load the landing page script from the current directory. Using a relative
+       path avoids issues with absolute paths being rewritten to index.html by
+       some static hosts. -->
+
+<!-- Deep-link handler and URL rewrite -->
+  <script>
+    (function() {
+      // 1. If the path is /profile/:id or /post/:id, rewrite it to a query URL
+      const parts = window.location.pathname.split('/');
+      if (parts.length >= 3 && (parts[1] === 'profile' || parts[1] === 'post')) {
+        const type = parts[1];
+        const id   = parts[2];
+        window.location.replace('/landing/?type=' + type + '&id=' + id);
+        return;
+      }
+      // 2. If the URL has ?type=…&id=…, try to open the deep link
+      const params = new URLSearchParams(window.location.search);
+      const type   = params.get('type');
+      const id     = params.get('id');
+      if (type && id) {
+        const deepLink = 'squad://' + type + '/' + id;
+        const store    = 'https://play.google.com/store/apps/details?id=com.mohamed_helicopter.squad';
+        const start    = Date.now();
+        window.location.href = deepLink;
+        setTimeout(() => {
+          if (Date.now() - start < 1500) {
+            window.location.href = store;
+          }
+        }, 1500);
+      }
+    })();
+  </script>
+
+  <!-- Inline copy of script.js – no external load -->
+  <script>
+    // Store links and URL helpers
+    const LINKS = {
+      player: {
+        android: 'https://play.google.com/store/apps/details?id=com.mohamed_helicopter.squad_player',
+        ios:     'https://apps.apple.com/eg/app/%D9%84%D8%A7%D8%B9%D8%A8-%D8%A5%D8%B3%D9%83%D9%88%D8%A7%D8%AF/id6756811939?l=ar'
+      },
+      user: {
+        android: 'https://play.google.com/store/apps/details?id=com.mohamed_helicopter.squad',
+        ios:     'https://apps.apple.com/eg/app/%D8%A5%D8%B3%D9%83%D9%88%D8%A7%D8%AF/id6756811679?l=ar'
+      }
+    };
+
+    // Set link destinations on buttons
+    function setHref(id, url) {
+      const el = document.getElementById(id);
+      if (el) el.href = url;
+    }
+    setHref('playerAndroid', LINKS.player.android);
+    setHref('playerIOS',     LINKS.player.ios);
+    setHref('userAndroid',   LINKS.user.android);
+    setHref('userIOS',       LINKS.user.ios);
+    setHref('playerAndroid2', LINKS.player.android);
+    setHref('playerIOS2',     LINKS.player.ios);
+    setHref('userAndroid2',   LINKS.user.android);
+    setHref('userIOS2',       LINKS.user.ios);
+
+    // Set current year in the footer
+    const yearEl = document.getElementById('year');
+    if (yearEl) yearEl.textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
