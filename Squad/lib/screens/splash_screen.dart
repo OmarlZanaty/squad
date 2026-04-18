@@ -1,8 +1,15 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:squad/utils/app_colors.dart';
+import 'package:http/http.dart' as http;
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:squad/config/app_config.dart';
+import 'package:squad/models/app_version_policy.dart';
+import 'package:squad/screens/force_update_screen.dart';
 import 'package:squad/services/auth_service.dart';
 import 'package:squad/screens/login_screen.dart';
 import 'package:squad/screens/main_screen.dart';
+import 'package:squad/utils/version_utils.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -70,35 +77,149 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _controller.forward();
 
-    _checkAuthAndNavigate();
+    _checkVersionAndNavigate();
   }
 
-  Future<void> _checkAuthAndNavigate() async {
+  Future<void> _checkVersionAndNavigate() async {
     await Future.delayed(const Duration(seconds: 3)); // Longer delay for slower animation
 
     if (!mounted) return;
 
+    try {
+      final info = await PackageInfo.fromPlatform();
+      final platform = Platform.isIOS ? 'ios' : 'android';
+      final res = await http
+          .get(Uri.parse('${AppConfig.appVersionPolicyUrl}?platform=$platform'))
+          .timeout(const Duration(seconds: 8));
+
+      if (res.statusCode == 200 && mounted) {
+        final policy = AppVersionPolicy.fromJson(jsonDecode(res.body));
+        final current = info.version;
+        final packageName = info.packageName;
+
+        if (policy.maintenanceMode && mounted) {
+          _showMaintenanceDialog(policy.message);
+          return;
+        }
+
+        if (VersionUtils.isOlderThan(current, policy.minimumVersion) && mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ForceUpdateScreen(
+                policy: policy,
+                currentVersion: current,
+                packageName: packageName,
+              ),
+            ),
+          );
+          return;
+        }
+
+        if (VersionUtils.isOlderThan(current, policy.latestVersion) && mounted) {
+          final goUpdate = await _showSoftUpdateDialog(policy, current);
+          if (!mounted) return;
+          if (goUpdate == true) {
+            await ForceUpdateScreen.openStoreStatic(
+              context,
+              policy: policy,
+              packageName: packageName,
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[Splash] Version check failed (non-blocking): $e');
+    }
+
     // Check if user is already logged in
     final token = await AuthService.getToken();
-    print('Splash: Token = $token'); // Debug
 
     if (!mounted) return;
 
     if (token != null && token.isNotEmpty) {
       // User is logged in, go to home
-      print('Splash: Navigating to Home'); // Debug
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const MainScreen()),
       );
     } else {
       // User not logged in, go to login
-      print('Splash: Navigating to Login'); // Debug
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     }
+  }
+
+  Future<bool?> _showSoftUpdateDialog(AppVersionPolicy policy, String current) {
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: const [
+            Icon(Icons.system_update, color: Colors.blue),
+            SizedBox(width: 10),
+            Text('تحديث جديد متاح', style: TextStyle(fontSize: 18)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(policy.message, style: const TextStyle(height: 1.5)),
+            const SizedBox(height: 8),
+            Text(
+              'الإصدار الحالي: $current\nأحدث إصدار: ${policy.latestVersion}',
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('لاحقاً'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('تحديث الآن'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showMaintenanceDialog(String message) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => WillPopScope(
+        onWillPop: () async => false,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: const [
+              Icon(Icons.build_circle, color: Colors.orange),
+              SizedBox(width: 10),
+              Text('صيانة مؤقتة'),
+            ],
+          ),
+          content: Text(message, style: const TextStyle(height: 1.5)),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await Future.delayed(const Duration(seconds: 5));
+                if (mounted) _checkVersionAndNavigate();
+              },
+              child: const Text('إعادة المحاولة'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override

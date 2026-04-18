@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:squad_player/services/auth_service.dart';
 import 'package:squad_player/utils/app_colors.dart';
 import 'package:squad_player/screens/login_screen.dart';
@@ -12,6 +11,7 @@ import 'package:squad_player/utils/app_localizations.dart';
 import 'package:squad_player/screens/terms_of_use_screen.dart';
 import 'package:squad_player/screens/privacy_policy_screen.dart';
 import 'package:squad_player/screens/delete_account_screen.dart';
+import 'package:squad_player/screens/version_check_screen.dart';
 
 import '../services/secure_storage_service.dart';
 
@@ -263,6 +263,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               MaterialPageRoute(
                 builder: (_) => const PrivacyPolicyScreen(),
+              ),
+            ),
+          ),
+          _card(
+            icon: Icons.system_update_alt,
+            title: 'Version check',
+            subtitle: 'Check backend minimum/latest version status',
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const VersionCheckScreen(),
               ),
             ),
           ),

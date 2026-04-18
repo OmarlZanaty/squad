@@ -10,6 +10,7 @@ import 'package:squad_player/screens/force_update_screen.dart';
 import 'package:squad_player/screens/login_screen.dart';
 import 'package:squad_player/screens/main_screen.dart';
 import 'package:squad_player/services/auth_service.dart';
+import 'package:squad_player/utils/version_utils.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -94,7 +95,8 @@ class _SplashScreenState extends State<SplashScreen>
           .timeout(const Duration(seconds: 8));
 
       if (res.statusCode == 200 && mounted) {
-        final policy     = AppVersionPolicy.fromJson(jsonDecode(res.body));
+        final policy = AppVersionPolicy.fromJson(jsonDecode(res.body));
+        // Comes from pubspec.yaml `version: x.y.z+build`
         final current    = info.version;          // e.g. "1.2.0"
         final packageName= info.packageName;
 
@@ -105,7 +107,8 @@ class _SplashScreenState extends State<SplashScreen>
         }
 
         // Force update — go to ForceUpdateScreen (user cannot dismiss)
-        if (policy.forceUpdate && _isOlderThan(current, policy.minimumVersion) && mounted) {
+        if (VersionUtils.isOlderThan(current, policy.minimumVersion) &&
+            mounted) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -120,7 +123,8 @@ class _SplashScreenState extends State<SplashScreen>
         }
 
         // Soft update — show dismissible banner then continue
-        if (_isOlderThan(current, policy.latestVersion) && mounted) {
+        if (VersionUtils.isOlderThan(current, policy.latestVersion) &&
+            mounted) {
           final goUpdate = await _showSoftUpdateDialog(policy, current);
           if (!mounted) return;
           if (goUpdate == true) {
@@ -156,27 +160,6 @@ class _SplashScreenState extends State<SplashScreen>
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
     }
-  }
-
-  // ── Version comparison helpers ────────────────────────────────────────────
-  /// Returns true if [current] is strictly older than [required].
-  bool _isOlderThan(String current, String required) {
-    try {
-      final c = _parse(current);
-      final r = _parse(required);
-      for (int i = 0; i < 3; i++) {
-        if (c[i] < r[i]) return true;
-        if (c[i] > r[i]) return false;
-      }
-      return false; // equal
-    } catch (_) {
-      return false;
-    }
-  }
-
-  List<int> _parse(String v) {
-    final parts = v.trim().split('.');
-    return List.generate(3, (i) => i < parts.length ? int.tryParse(parts[i]) ?? 0 : 0);
   }
 
   // ── Dialogs ───────────────────────────────────────────────────────────────
