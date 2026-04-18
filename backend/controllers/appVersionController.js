@@ -13,7 +13,11 @@ exports.getVersionPolicy = async (req, res) => {
     const [rows] = await db.query(
       `SELECT * FROM app_version_policy
        WHERE platform = ? OR platform = 'both'
-       ORDER BY FIELD(platform, ?, 'both') DESC
+       ORDER BY CASE
+         WHEN platform = ? THEN 0
+         WHEN platform = 'both' THEN 1
+         ELSE 2
+       END ASC
        LIMIT 1`,
       [platform, platform]
     );

@@ -11,6 +11,7 @@ import 'package:squad/screens/terms_of_use_screen.dart';
 import 'package:squad/screens/privacy_policy_screen.dart';
 import 'package:squad/screens/delete_account_screen.dart';
 import 'package:squad/screens/blocked_users_screen.dart';
+import 'package:squad/screens/version_check_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -313,6 +314,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             subtitle: '${loc.tr('version')} $_appVersion',
             trailing: const Icon(Icons.arrow_forward_ios, size: 16),
             onTap: _showAboutDialog,
+          ),
+          const SizedBox(height: 12),
+          _buildSettingCard(
+            icon: Icons.system_update_alt,
+            title: 'Version check',
+            subtitle: 'Check backend minimum/latest version status',
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const VersionCheckScreen()),
+              );
+            },
           ),
 
           const SizedBox(height: 24),

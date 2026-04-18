@@ -109,10 +109,9 @@ class _SplashScreenState extends State<SplashScreen>
 
       if (res.statusCode == 200 && mounted) {
         final policy = AppVersionPolicy.fromJson(jsonDecode(res.body));
-
-        debugPrint('[Splash] min=${policy.minimumVersion} latest=${policy.latestVersion}');
-        debugPrint('[Splash] storeAndroid=${policy.androidStoreUrl}');
-        debugPrint('[Splash] isOlderThan($current, ${policy.minimumVersion}) = ${VersionUtils.isOlderThan(current, policy.minimumVersion)}');
+        // Comes from pubspec.yaml `version: x.y.z+build`
+        final current    = info.version;          // e.g. "1.2.0"
+        final packageName= info.packageName;
 
         // Maintenance mode
         if (policy.maintenanceMode && mounted) {
@@ -120,9 +119,9 @@ class _SplashScreenState extends State<SplashScreen>
           return;
         }
 
-        // Force update: current < minimum_version
-        if (VersionUtils.isOlderThan(current, policy.minimumVersion) && mounted) {
-          debugPrint('[Splash] 🚨 Force update: $current < ${policy.minimumVersion}');
+        // Force update — go to ForceUpdateScreen (user cannot dismiss)
+        if (VersionUtils.isOlderThan(current, policy.minimumVersion) &&
+            mounted) {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -136,9 +135,9 @@ class _SplashScreenState extends State<SplashScreen>
           return;
         }
 
-        // Soft update: current < latest but >= minimum
-        if (VersionUtils.isOlderThan(current, policy.latestVersion) && mounted) {
-          debugPrint('[Splash] 💡 Soft update: $current < ${policy.latestVersion}');
+        // Soft update — show dismissible banner then continue
+        if (VersionUtils.isOlderThan(current, policy.latestVersion) &&
+            mounted) {
           final goUpdate = await _showSoftUpdateDialog(policy, current);
           if (!mounted) return;
           if (goUpdate == true) {
@@ -173,6 +172,7 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
+  // ── Dialogs ───────────────────────────────────────────────────────────────
   Future<bool?> _showSoftUpdateDialog(AppVersionPolicy policy, String current) {
     return showDialog<bool>(
       context: context,

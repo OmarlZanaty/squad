@@ -89,6 +89,10 @@ In this repository, the version policy backend is already implemented here:
   - `getVersionPolicy`
   - `updateVersionPolicy`
 
+Platform selection behavior:
+- Backend prefers exact platform row (`android`/`ios`) first.
+- Falls back to `both` only when exact platform row is missing.
+
 ### How to update `minimum_version` on backend
 
 Use the admin endpoint:
@@ -158,3 +162,15 @@ Minimum-version blocking is now backend-driven in app logic:
 - Update action launches store link via `url_launcher` using:
   - response-provided store URL when available
   - fallback URLs from `AppConfig`
+
+## In-app verification screen
+
+For quick QA on device, open:
+
+`Settings -> Version check`
+
+This screen shows:
+- current app version
+- backend `latest_version`
+- backend `minimum_version`
+- computed state (`Blocked`, `Optional update`, `Up to date`, `Maintenance`)
