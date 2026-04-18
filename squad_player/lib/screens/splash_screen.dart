@@ -1,9 +1,13 @@
+// lib/screens/splash_screen.dart
+//
+// KEY CHANGE: Sends ?platform=android&app_id=com.xxx.squad_player
+// so the backend returns the policy for THIS app, not the Squad admin app.
+
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:squad_player/config/app_config.dart';
 import 'package:squad_player/models/app_version_policy.dart';
 import 'package:squad_player/screens/force_update_screen.dart';
@@ -79,36 +83,46 @@ class _SplashScreenState extends State<SplashScreen>
     super.dispose();
   }
 
-  // ── Main flow ─────────────────────────────────────────────────────────────
   Future<void> _checkVersionAndNavigate() async {
-    // Wait for splash animation minimum duration
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
 
-    // ── Step 1: Version / maintenance check ──────────────────────────────
     try {
-      final info     = await PackageInfo.fromPlatform();
-      final platform = Platform.isIOS ? 'ios' : 'android';
+      final info        = await PackageInfo.fromPlatform();
+      final current     = info.version;      // e.g. "1.0.13"
+      final packageName = info.packageName;  // e.g. "com.mohamed_helicopter.squad_player"
+      final platform    = Platform.isIOS ? 'ios' : 'android';
 
-      final res = await http
-          .get(Uri.parse('${AppConfig.appVersionPolicyUrl}?platform=$platform'))
-          .timeout(const Duration(seconds: 8));
+      // ✅ Send both platform AND app_id so backend returns the right row
+      final url = Uri.parse(AppConfig.appVersionPolicyUrl)
+          .replace(queryParameters: {
+        'platform': platform,
+        'app_id':   packageName,   // ← THIS is the key fix
+      });
+
+      debugPrint('[Splash] version=$current  package=$packageName');
+      debugPrint('[Splash] Calling: $url');
+
+      final res = await http.get(url).timeout(const Duration(seconds: 8));
+
+      debugPrint('[Splash] HTTP ${res.statusCode}: ${res.body}');
 
       if (res.statusCode == 200 && mounted) {
         final policy = AppVersionPolicy.fromJson(jsonDecode(res.body));
-        // Comes from pubspec.yaml `version: x.y.z+build`
-        final current    = info.version;          // e.g. "1.2.0"
-        final packageName= info.packageName;
 
-        // Maintenance mode — block everything
+        debugPrint('[Splash] min=${policy.minimumVersion} latest=${policy.latestVersion}');
+        debugPrint('[Splash] storeAndroid=${policy.androidStoreUrl}');
+        debugPrint('[Splash] isOlderThan($current, ${policy.minimumVersion}) = ${VersionUtils.isOlderThan(current, policy.minimumVersion)}');
+
+        // Maintenance mode
         if (policy.maintenanceMode && mounted) {
           _showMaintenanceDialog(policy.message);
           return;
         }
 
-        // Force update — go to ForceUpdateScreen (user cannot dismiss)
-        if (VersionUtils.isOlderThan(current, policy.minimumVersion) &&
-            mounted) {
+        // Force update: current < minimum_version
+        if (VersionUtils.isOlderThan(current, policy.minimumVersion) && mounted) {
+          debugPrint('[Splash] 🚨 Force update: $current < ${policy.minimumVersion}');
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
@@ -122,30 +136,27 @@ class _SplashScreenState extends State<SplashScreen>
           return;
         }
 
-        // Soft update — show dismissible banner then continue
-        if (VersionUtils.isOlderThan(current, policy.latestVersion) &&
-            mounted) {
+        // Soft update: current < latest but >= minimum
+        if (VersionUtils.isOlderThan(current, policy.latestVersion) && mounted) {
+          debugPrint('[Splash] 💡 Soft update: $current < ${policy.latestVersion}');
           final goUpdate = await _showSoftUpdateDialog(policy, current);
           if (!mounted) return;
           if (goUpdate == true) {
-            // Open store
             await ForceUpdateScreen.openStoreStatic(
               context,
               policy: policy,
               packageName: packageName,
             );
-            // Still navigate into app after opening store
           }
         }
       }
-    } catch (e) {
-      // Network error during version check — don't block the user
-      debugPrint('[Splash] Version check failed (non-blocking): $e');
+    } catch (e, st) {
+      debugPrint('[Splash] Version check error (non-blocking): $e\n$st');
     }
 
     if (!mounted) return;
 
-    // ── Step 2: Auth check ────────────────────────────────────────────────
+    // Auth check
     final token = await AuthService.getToken();
     if (!mounted) return;
 
@@ -162,15 +173,14 @@ class _SplashScreenState extends State<SplashScreen>
     }
   }
 
-  // ── Dialogs ───────────────────────────────────────────────────────────────
   Future<bool?> _showSoftUpdateDialog(AppVersionPolicy policy, String current) {
     return showDialog<bool>(
       context: context,
       barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
-          children: const [
+        title: const Row(
+          children: [
             Icon(Icons.system_update, color: Colors.blue),
             SizedBox(width: 10),
             Text('تحديث جديد متاح', style: TextStyle(fontSize: 18)),
@@ -210,8 +220,8 @@ class _SplashScreenState extends State<SplashScreen>
         onWillPop: () async => false,
         child: AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: const [
+          title: const Row(
+            children: [
               Icon(Icons.build_circle, color: Colors.orange),
               SizedBox(width: 10),
               Text('صيانة مؤقتة'),
@@ -221,7 +231,6 @@ class _SplashScreenState extends State<SplashScreen>
           actions: [
             TextButton(
               onPressed: () async {
-                // Allow retry after delay
                 Navigator.pop(ctx);
                 await Future.delayed(const Duration(seconds: 5));
                 if (mounted) _checkVersionAndNavigate();
@@ -234,7 +243,6 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 
-  // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -252,7 +260,11 @@ class _SplashScreenState extends State<SplashScreen>
                     offset: Offset(0, _slideAnimation.value),
                     child: FadeTransition(
                       opacity: _fadeAnimation,
-                      child: Image.asset('assets/images/SQlast.png', width: 250, height: 250),
+                      child: Image.asset(
+                        'assets/images/SQlast.png',
+                        width: 250,
+                        height: 250,
+                      ),
                     ),
                   ),
                   Transform.translate(
@@ -284,11 +296,3 @@ class _SplashScreenState extends State<SplashScreen>
     );
   }
 }
-/*
-
-// ── Extension on ForceUpdateScreen to expose store opening statically ────────
-extension ForceUpdateScreenExt on ForceUpdateScreen {
-  void openStoreStatic(BuildContext context) {
-    openStore(context);
-  }
-}*/

@@ -888,7 +888,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+/*          SizedBox(height: 16),
           InkWell(
             onTap: _isEditing ? () async {
               DateTime? pickedDate = await showDatePicker(
@@ -913,7 +913,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 //onTap: _selectBirthday,
               ),
             ),
-          ),
+          ),*/
 
           SizedBox(height: 16),
           Row(

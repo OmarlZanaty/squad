@@ -17,7 +17,8 @@ import 'package:squad_player/services/api_service.dart';
 
 import 'main_screen.dart';
 
-enum _Period { week, month, year, all, custom }
+enum _Period { all, week, month, year, custom }
+
 
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
@@ -56,9 +57,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         break;
       case _Period.all:
       case _Period.custom:
-      // For 'all', null means no date filter (backend returns all time)
-      // For 'custom', _selectedRange is set by the date picker directly
         if (period == _Period.all) _selectedRange = null;
+        // For custom, _selectedRange is set directly by the picker
         break;
     }
   }
@@ -70,9 +70,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   @override
   void initState() {
     super.initState();
-    // ✅ Default = all time (no range filter)
+    // ✅ Default = all time (no date filter)
     _selectedPeriod = _Period.all;
-    _selectedRange  = null;
+    _selectedRange = null;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadStatistics();
@@ -308,58 +308,89 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Future<void> _showDateRangePicker() async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final now       = DateTime.now();
     final firstDate = DateTime(2020);
-    final lastDate  = DateTime.now();
+    final lastDate  = now;
 
-    DateTimeRange? initialRange;
+    // Build a safe initial range
+    DateTimeRange initialRange;
     if (_selectedRange != null) {
       final s = _selectedRange!.start.isBefore(firstDate) ? firstDate : _selectedRange!.start;
-      final e = _selectedRange!.end.isAfter(lastDate) ? lastDate : _selectedRange!.end;
-      if (!s.isAfter(e)) initialRange = DateTimeRange(start: s, end: e);
+      final e = _selectedRange!.end.isAfter(lastDate)     ? lastDate  : _selectedRange!.end;
+      initialRange = DateTimeRange(start: s, end: e);
+    } else {
+      initialRange = DateTimeRange(
+        start: now.subtract(const Duration(days: 6)),
+        end: lastDate,
+      );
     }
-    initialRange ??= DateTimeRange(
-      start: lastDate.subtract(const Duration(days: 7)),
-      end: lastDate,
-    );
 
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: firstDate,
-      lastDate: lastDate,
-      initialDateRange: initialRange,
-      initialEntryMode: DatePickerEntryMode.calendarOnly,
-      builder: (ctx, child) => Theme(
-        data: isDark
-            ? ThemeData.dark().copyWith(
-          colorScheme: ColorScheme.dark(
-            primary: AppColors.darkAccent,
-            onPrimary: Colors.white,
-            surface: const Color(0xFF1E1E2E),
+    try {
+      final DateTimeRange? picked = await showDateRangePicker(
+        context: context,
+        firstDate: firstDate,
+        lastDate:  lastDate,
+        initialDateRange: initialRange,
+        initialEntryMode: DatePickerEntryMode.calendarOnly,
+        // ✅ Do NOT set locale: 'ar' here — it causes Arabic digits in DateFormat
+        builder: (ctx, child) => Theme(
+          data: Theme.of(ctx).copyWith(
+            colorScheme: isDark
+                ? ColorScheme.dark(
+              primary:   AppColors.darkAccent,
+              onPrimary: Colors.white,
+              surface:   AppColors.cardDark,
+              onSurface: Colors.white,
+            )
+                : ColorScheme.light(
+              primary:   AppColors.primary,
+              onPrimary: Colors.white,
+              surface:   Colors.white,
+              onSurface: Colors.black,
+            ),
+            dialogBackgroundColor: isDark ? AppColors.cardDark : Colors.white,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: isDark ? AppColors.darkAccent : AppColors.primary,
+              ),
+            ),
           ),
-        )
-            : ThemeData.light().copyWith(
-          colorScheme: ColorScheme.light(
-            primary: AppColors.primary,
-            onPrimary: Colors.white,
-          ),
+          child: child!,
         ),
-        child: child!,
-      ),
-    );
+      );
 
-    if (picked == null || !mounted) return;
+      if (picked == null || !mounted) return;
 
-    final normalized = DateTimeRange(
-      start: DateTime(picked.start.year, picked.start.month, picked.start.day),
-      end:   DateTime(picked.end.year, picked.end.month, picked.end.day, 23, 59, 59),
-    );
+      final normalized = DateTimeRange(
+        start: DateTime(picked.start.year, picked.start.month, picked.start.day),
+        end:   DateTime(picked.end.year,   picked.end.month,   picked.end.day, 23, 59, 59),
+      );
 
-    setState(() {
-      _selectedRange  = normalized;
-      _selectedPeriod = _Period.custom; // ✅ Mark as custom so buttons deselect
-    });
+      setState(() {
+        _selectedRange  = normalized;
+        _selectedPeriod = _Period.custom; // ✅ deselects all period chips
+      });
 
-    await _loadStatistics();
+      await _loadStatistics();
+
+      if (!mounted) return;
+      // ✅ Use explicit English locale for display — NEVER change intl.defaultLocale
+      final fmt = intl.DateFormat('d/M/yyyy', 'en');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${fmt.format(normalized.start)}  →  ${fmt.format(normalized.end)}',
+          ),
+          backgroundColor: isDark ? AppColors.darkAccent : AppColors.primary,
+        ),
+      );
+    } catch (e) {
+      debugPrint('[DatePicker] error: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
 
@@ -516,10 +547,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           ? Center(child: CircularProgressIndicator())
           : RefreshIndicator(
         onRefresh: () async {
-          setState(() {
-            _selectedPeriod = _Period.all;
-            _selectedRange = null;
-          });
+          setState(() { _selectedPeriod = _Period.all; _selectedRange = null; });
           await _loadStatistics();
         },
         child: SingleChildScrollView(
@@ -614,8 +642,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   Widget _buildPeriodSelector(bool isDark) {
     final loc = AppLocalizations.of(context)!;
 
-    // Stable enum → label mapping (never breaks on language change)
-    final periods = <_Period, String>{
+    // ✅ Stable enum → label (never breaks on language switch)
+    final chips = <_Period, String>{
       _Period.all:   loc.tr('all_time'),
       _Period.week:  loc.tr('week'),
       _Period.month: loc.tr('month'),
@@ -630,8 +658,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         physics: const BouncingScrollPhysics(),
         child: Row(
           children: [
-            // Period chips
-            ...periods.entries.map((entry) {
+            // ── Fixed period chips ──
+            ...chips.entries.map((entry) {
               final isSelected = _selectedPeriod == entry.key;
               return GestureDetector(
                 onTap: () async {
@@ -642,8 +670,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   await _loadStatistics();
                 },
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  duration: const Duration(milliseconds: 180),
+                  margin: const EdgeInsets.symmetric(horizontal: 5),
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                   decoration: BoxDecoration(
                     color: isSelected
@@ -657,7 +685,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                             .withOpacity(0.3),
                         blurRadius: 8,
                         offset: const Offset(0, 4),
-                      ),
+                      )
                     ]
                         : [],
                   ),
@@ -666,7 +694,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                     style: TextStyle(
                       color: isSelected
                           ? Colors.white
-                          : (isDark ? Colors.white : Colors.black87),
+                          : (isDark ? Colors.white70 : Colors.black87),
                       fontWeight:
                       isSelected ? FontWeight.bold : FontWeight.normal,
                       fontSize: 14,
@@ -676,61 +704,6 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               );
             }),
 
-            // Custom date chip — shows selected range if active
-            GestureDetector(
-              onTap: () async {
-                await _showDateRangePicker();
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                decoration: BoxDecoration(
-                  color: _selectedPeriod == _Period.custom
-                      ? (isDark ? AppColors.darkAccent : AppColors.primary)
-                      : (isDark ? AppColors.cardDark : Colors.white.withOpacity(0.9)),
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: _selectedPeriod == _Period.custom
-                      ? [
-                    BoxShadow(
-                      color: (isDark ? AppColors.darkAccent : AppColors.primary)
-                          .withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                      : [],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.date_range,
-                      size: 14,
-                      color: _selectedPeriod == _Period.custom
-                          ? Colors.white
-                          : (isDark ? Colors.white70 : Colors.black54),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      _selectedPeriod == _Period.custom && _selectedRange != null
-                          ? '${_selectedRange!.start.day}/${_selectedRange!.start.month} - '
-                          '${_selectedRange!.end.day}/${_selectedRange!.end.month}'
-                          : loc.tr('custom') ?? 'مخصص',
-                      style: TextStyle(
-                        color: _selectedPeriod == _Period.custom
-                            ? Colors.white
-                            : (isDark ? Colors.white : Colors.black87),
-                        fontWeight: _selectedPeriod == _Period.custom
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ],
         ),
       ),
